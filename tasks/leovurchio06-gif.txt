@@ -1,0 +1,89 @@
+=====================================================================
+  TASK FOR: leovurchio06-gif  (Leo)
+  BRANCH:   leo/listing-detail
+  PAGES:    /listings/[id]   — one apartment in full
+            /my-listings     — the apartments I posted
+=====================================================================
+
+First read tasks/00-EVERYONE-READ-THIS-FIRST.txt.
+
+YOUR GOAL
+---------
+Two pages. (1) When someone clicks a card on the home page they land
+on a page with everything about that apartment and a way to contact
+the student who posted it. (2) A simple dashboard where a logged-in
+student sees their own listings and can mark one as "taken".
+
+FILES YOU OWN
+-------------
+   src/app/listings/[id]/page.tsx       detail page
+   src/app/listings/[id]/not-found.tsx  "This listing doesn't exist"
+   src/components/PhotoGallery.tsx      photos of the apartment
+   src/components/ContactCard.tsx       "Contact <name>" box
+   src/app/my-listings/page.tsx         dashboard
+   src/components/MyListingRow.tsx      one row of the dashboard
+
+WHAT TO BUILD — step by step
+----------------------------
+PART A — detail page  /listings/[id]
+1. In page.tsx, get the id:
+      const { id } = await params;      // params is a Promise in Next 16
+   Find the listing in src/lib/mock-data.ts. If not found, call
+   notFound() from "next/navigation" and create not-found.tsx.
+
+2. Layout (2 columns on laptop, stacked on phone):
+   LEFT:  PhotoGallery (big first photo, small thumbnails under it,
+          clicking a thumbnail swaps the big one -> "use client").
+          If photos is empty show one grey placeholder.
+          Below: title "<rooms> rooms in <neighbourhood>, <city>",
+          rent, available from/until ("open-ended" when null),
+          description (keep line breaks: whitespace-pre-line).
+   RIGHT: ContactCard: owner name, a button "Contact <first name>"
+          which is a mailto: link to ownerEmail with a pre-filled
+          subject ("StudentSwap: your apartment in <city>").
+          Also a "Back to listings" link.
+
+3. If status === "taken", show a clear red banner "This apartment has
+   already been taken" and disable the contact button.
+
+4. Page metadata: export generateMetadata so the browser tab says
+   "2 rooms in Navigli, Milan — StudentSwap".
+
+PART B — dashboard  /my-listings
+5. For now pretend the logged-in user is the owner of the first mock
+   listing (Taoufik will plug real auth later; leave a clear
+   // TODO(auth) comment where the user id comes from).
+   Show a table/list of that user's listings: photo thumb, city,
+   rent, status badge (green "active" / grey "taken"), and buttons
+   "Edit" (links to /listings/<id>/edit — Côme's page) and
+   "Mark as taken" (for now just console.log the id — Taoufik will
+   wire the API; leave // TODO(api) there).
+   Big button "Post a new apartment" -> /listings/new.
+   Empty state if the user has no listings.
+
+DONE WHEN
+---------
+[ ] /listings/<any mock id> shows photos, info, description, contact
+[ ] /listings/does-not-exist shows the not-found page
+[ ] "taken" listing shows the banner and disabled button
+[ ] Gallery thumbnails switch the main photo
+[ ] Works on phone (stacked) and laptop (2 columns)
+[ ] /my-listings shows the fake user's listings + empty state
+[ ] `npm run build` passes, screenshots in the PR
+
+IF YOU FINISH EARLY (bonus)
+---------------------------
+- "Share" button that copies the URL to the clipboard
+- "Similar apartments in <city>" — 3 other cards from the same city
+  (reuse Alejandro's ListingCard once his PR is merged)
+- Days-until-available counter
+
+PROMPT TO START WITH
+--------------------
+"Next.js 16 App Router, TypeScript, Tailwind. Here is the Listing
+type: <paste>. Create src/app/listings/[id]/page.tsx. params is a
+Promise<{ id: string }>. Find the listing by id in the mock array
+exported from '@/lib/mock-data' and call notFound() if missing.
+Render a 2-column layout (stacked on mobile): photo gallery + details
+on the left, a contact card with a mailto link on the right. Add
+generateMetadata for the title."

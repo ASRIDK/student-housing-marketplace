@@ -1,0 +1,104 @@
+=====================================================================
+  TASK FOR: Andrea-CALLIES  (Andrea)
+  BRANCH:   andrea/layout-auth-ui
+  PAGES:    every page (layout, navbar, footer)
+            /login  and  /signup   (the forms, not the logic)
+=====================================================================
+
+First read tasks/00-EVERYONE-READ-THIS-FIRST.txt.
+
+YOUR GOAL
+---------
+Make the site feel like ONE product. You own the frame that wraps
+every page (navbar, footer, colours, fonts) and the login / signup
+screens. The others build pages inside your frame, so the sooner
+your navbar is merged the better everything looks — your PR should
+be the FIRST one merged. Start with the layout, do auth pages second.
+
+FILES YOU OWN
+-------------
+   src/app/layout.tsx              root layout (already exists in the
+                                   skeleton — you edit it)
+   src/app/globals.css             Tailwind theme colours (edit only
+                                   the :root variables)
+   src/components/Navbar.tsx
+   src/components/Footer.tsx
+   src/components/CityBadge.tsx    small coloured badge per city
+                                   (Alejandro & Leo will reuse it)
+   src/app/login/page.tsx
+   src/app/signup/page.tsx
+   src/components/AuthForm.tsx     shared login/signup form
+   src/app/about/page.tsx          short "how it works" page
+   public/logo.svg                 (optional) a simple logo
+
+WHAT TO BUILD — step by step
+----------------------------
+1. Design choices (write them down at the top of globals.css as a
+   comment so others follow them):
+     - one primary colour, one accent, grey scale
+     - one font via next/font (e.g. Inter or Manrope)
+     - one colour per city for CityBadge:
+         Milan / Madrid / Geneva / Paris / Marseille
+   Keep it clean and modern; the reference feeling is "Airbnb for
+   students", not a corporate site.
+
+2. Navbar (sticky top): logo/wordmark "StudentSwap" -> "/",
+   links: Browse ("/"), Post an apartment ("/listings/new"),
+   How it works ("/about"). Right side: "Log in" + "Sign up" buttons.
+   On phone: hamburger button that opens a simple dropdown menu
+   ("use client"). Highlight the active link (usePathname).
+   For now the navbar always shows "Log in / Sign up"; Taoufik will
+   later swap it for the user's name + "My listings" when logged in.
+   Leave a // TODO(auth) comment there.
+
+3. Footer: school name, the 5 cities as links to
+   "/?city=Milan" etc., "Made by ... for the Data Science class 2026",
+   GitHub repo link.
+
+4. layout.tsx: <Navbar /> ... <main className="mx-auto max-w-6xl
+   px-4 py-8">{children}</main> ... <Footer />. Set the metadata
+   title template: "%s — StudentSwap".
+
+5. CityBadge: <CityBadge city="Paris" /> -> small pill with the
+   city colour. Export it; tell Alejandro and Leo when it's merged.
+
+6. Login & Signup pages (UI only — no real login yet):
+   AuthForm ("use client") with mode "login" | "signup".
+     signup: name, school email, password, confirm password
+     login:  email, password
+   Client-side checks: valid email, password >= 8 chars, passwords
+   match. Show errors under the fields. On submit: console.log the
+   values and show "Not connected to the backend yet" — Taoufik
+   wires it. Leave // TODO(auth). Link between the two pages
+   ("Already have an account? Log in").
+   Centre the card on the page, works on phone.
+
+7. /about page: 3 short steps with icons (emoji is fine):
+   "Post your apartment" -> "A student contacts you" -> "Hand over
+   the keys". Plus the list of the 5 campuses/cities.
+
+DONE WHEN
+---------
+[ ] Every page has the navbar + footer, consistent colours and font
+[ ] Navbar collapses to a hamburger menu on phone, active link highlighted
+[ ] CityBadge exists with 5 distinct colours
+[ ] /login and /signup show validated forms (UI only)
+[ ] /about exists
+[ ] `npm run build` passes, screenshots (phone + laptop) in the PR
+
+IF YOU FINISH EARLY (bonus)
+---------------------------
+- Dark mode toggle (Tailwind `dark:` classes)
+- A nicer 404 page: src/app/not-found.tsx
+- Favicon + Open Graph image so links look good on WhatsApp
+- A loading skeleton: src/app/loading.tsx
+
+PROMPT TO START WITH
+--------------------
+"Next.js 16 App Router, TypeScript, Tailwind CSS. Create
+src/components/Navbar.tsx: a sticky, responsive navbar with a
+'StudentSwap' wordmark linking to '/', links to '/', '/listings/new'
+and '/about', and 'Log in' / 'Sign up' buttons linking to '/login'
+and '/signup'. On mobile show a hamburger button that toggles a
+dropdown menu. Highlight the active link using usePathname. This is
+a client component. No external UI libraries."

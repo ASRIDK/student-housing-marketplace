@@ -1,0 +1,81 @@
+=====================================================================
+  TASK FOR: alejandromirandadefrutos7-sudo  (Alejandro)
+  BRANCH:   alejandro/browse-listings
+  PAGE:     Home page  "/"  — browse all listings + filters
+=====================================================================
+
+First read tasks/00-EVERYONE-READ-THIS-FIRST.txt.
+
+YOUR GOAL
+---------
+When someone opens the website, they see every available apartment as
+a grid of cards, and they can filter by city, maximum rent and
+"available from" date. This is the most-visited page of the site, so
+make it look good.
+
+FILES YOU OWN (create these, don't touch others)
+------------------------------------------------
+   src/app/page.tsx                    the home page
+   src/components/ListingCard.tsx      one card in the grid
+   src/components/FilterBar.tsx        the filters at the top
+   src/components/EmptyState.tsx       "No apartments match" message
+
+WHAT TO BUILD — step by step
+----------------------------
+1. ListingCard  (start here, it's the easiest)
+   Shows for one Listing: first photo (or a grey placeholder if
+   photos is empty), city as a small badge, neighbourhood, rent +
+   currency ("850 EUR / month"), rooms ("2 rooms" or "Studio"),
+   "Available from <date>". The whole card is a <Link> to
+   /listings/<id>. Cards look good in a grid of 3 on laptop, 1 on
+   phone.
+
+2. Home page grid
+   In src/app/page.tsx import the mock listings from
+   src/lib/mock-data.ts, keep only status === "active", and render a
+   ListingCard for each in a responsive grid
+   (grid-cols-1 sm:grid-cols-2 lg:grid-cols-3, gap-6).
+
+3. FilterBar  ("use client")
+   Controls: City dropdown (All / Milan / Madrid / Geneva / Paris /
+   Marseille), Max rent (number input), Available from (date input),
+   Reset button. Store the values in the URL, e.g.
+   /?city=Paris&maxRent=900  using useSearchParams + useRouter
+   (so the link is shareable). Remember to wrap it in <Suspense>.
+
+4. Filtering logic
+   In page.tsx read searchParams (it's a Promise — await it) and
+   filter the listings before rendering. Sort newest first
+   (createdAt). If nothing matches, show EmptyState.
+
+5. Polish
+   Show "12 apartments" count above the grid. Nice hover effect on
+   cards. Page title "StudentSwap — find your next apartment".
+
+DONE WHEN (checklist for your PR)
+---------------------------------
+[ ] Grid shows all active mock listings, 3 columns on laptop, 1 on phone
+[ ] Clicking a card goes to /listings/<id> (Leo's page — it may 404
+    until his PR is merged, that's fine)
+[ ] City / max rent / date filters work and update the URL
+[ ] Reset clears the filters
+[ ] Empty state appears when no listing matches
+[ ] No console errors, `npm run build` passes
+[ ] Screenshot in the PR
+
+IF YOU FINISH EARLY (bonus)
+---------------------------
+- Sort dropdown: newest / cheapest / most expensive
+- A small "New" badge for listings created in the last 7 days
+- Tabs per city with a count: "Paris (4)  Milan (2) ..."
+
+PROMPT TO START WITH (edit it, don't just paste it)
+-------------------------------------------------
+"I'm working in a Next.js 16 App Router project with TypeScript and
+Tailwind CSS. Here is the Listing type: <paste from types.ts>. Create
+src/components/ListingCard.tsx: a card component that takes a
+`listing: Listing` prop, shows the first photo with next/image (or a
+grey placeholder), city as a badge, neighbourhood, rent with
+currency, rooms, and available-from date, and wraps everything in a
+next/link Link to /listings/{id}. Mobile-friendly, no external UI
+libraries."

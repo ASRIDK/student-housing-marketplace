@@ -1,0 +1,171 @@
+=====================================================================
+  STUDENTSWAP  —  READ THIS FIRST (everyone)
+=====================================================================
+
+WHAT WE ARE BUILDING
+--------------------
+A website where students of our school can post their apartment in
+Milan, Madrid, Geneva, Paris or Marseille, so another student can take
+it over when they move campus. Other students browse the listings,
+open one, and contact the person who posted it.
+
+Taoufik owns the "backend" (database, login system, API, deployment).
+You own a piece of the "frontend" (the pages people see). Your personal
+file in this folder tells you exactly what to build.
+
+You do NOT need to understand the whole project. You only need to
+understand your page(s) and the shared "Listing" shape below.
+
+
+TOOLS YOU NEED (install once)
+-----------------------------
+1. Git            https://git-scm.com/downloads
+2. Node.js (LTS)  https://nodejs.org           -> check with:  node -v
+3. VS Code        https://code.visualstudio.com
+4. A GitHub account (you already have one — you're listed in README.md)
+5. An AI coding assistant (GitHub Copilot, ChatGPT, or any other).
+   This IS a prompt-engineering class: using AI to write the code is
+   expected. Reviewing and understanding what it wrote is your job.
+
+
+STEP 0 — GET THE CODE  (do this once)
+--------------------------------------
+   git clone <repo-url>        # Taoufik will send the URL
+   cd Project_1
+   git checkout <your-branch>  # your branch name is in your task file
+   git merge main              # pull in the latest skeleton from Taoufik
+   npm install
+   npm run dev                 # open http://localhost:3000
+
+If "npm install" fails because there is no package.json yet, the
+skeleton is not merged into main yet — ask Taoufik. Meanwhile you can
+still read your task and start writing the prompts you will use.
+
+
+HOW TO WORK EVERY DAY
+---------------------
+   git checkout <your-branch>
+   git merge main              # get everybody's latest merged work
+   ... build stuff ...
+   git add .
+   git commit -m "short message: what you did"
+   git push
+
+Commit often (every time something works). Small commits are easier to
+review and easier to undo.
+
+WHEN YOUR TASK IS DONE (or a good chunk of it):
+   1. git push
+   2. On GitHub, open a Pull Request (PR) from your branch into "main".
+   3. Put a screenshot of your page in the PR description.
+   4. Ask Taoufik to review. He merges it into main. Do NOT merge
+      yourself. Do NOT push directly to main.
+
+
+THE GOLDEN RULES
+----------------
+1. Only touch the files/folders listed in YOUR task file. If you need
+   to change a shared file (layout, global CSS, package.json), ask
+   Taoufik first — otherwise two people editing the same file =
+   merge conflicts.
+2. Never commit secrets: .env.local stays on your computer.
+3. Use the shared "Listing" shape below. Do not invent extra fields
+   without asking — the database must match.
+4. Every page must look OK on a phone (Chrome devtools -> toggle
+   device toolbar) and on a laptop.
+5. Ask for help early. A 5-minute message beats 3 hours stuck.
+
+
+PROJECT STRUCTURE (after Taoufik merges the skeleton)
+-----------------------------------------------------
+   src/app/               -> pages. Each folder = a URL.
+   src/app/page.tsx       -> the home page  ("/")
+   src/app/layout.tsx     -> wraps every page (navbar, footer) - Andrea
+   src/app/listings/[id]/page.tsx -> one listing  ("/listings/123") - Leo
+   src/app/listings/new/page.tsx  -> post a listing form           - Côme
+   src/app/login/page.tsx, src/app/signup/page.tsx                 - Andrea
+   src/app/my-listings/page.tsx                                    - Leo
+   src/components/        -> reusable pieces (ListingCard, FilterBar...)
+   src/lib/types.ts       -> the shared Listing / User types (below)
+   src/lib/mock-data.ts   -> fake listings to build the UI with
+   src/app/api/...        -> backend routes (Taoufik only)
+   prisma/                -> database schema (Taoufik only)
+
+Tech: Next.js 16 (App Router) + TypeScript + Tailwind CSS.
+You write React components in .tsx files and style with Tailwind
+classes (className="rounded-lg bg-white p-4 shadow"). No CSS files
+needed.
+
+
+THE SHARED DATA SHAPE  (src/lib/types.ts — everyone codes against this)
+-----------------------------------------------------------------------
+   export type City = "Milan" | "Madrid" | "Geneva" | "Paris" | "Marseille";
+   export type Currency = "EUR" | "CHF";
+
+   export type Listing = {
+     id: string;
+     ownerId: string;
+     ownerName: string;
+     ownerEmail: string;
+     city: City;
+     neighbourhood: string;        // e.g. "Navigli", "Malasaña"
+     rent: number;                 // per month
+     currency: Currency;           // Geneva = CHF, others = EUR
+     availableFrom: string;        // ISO date "2026-01-15"
+     availableUntil: string | null;// null = open-ended
+     rooms: number;                // 1 = studio
+     description: string;
+     photos: string[];             // image URLs (may be empty)
+     status: "active" | "taken";
+     createdAt: string;            // ISO date-time
+   };
+
+   export type User = {
+     id: string;
+     name: string;
+     email: string;
+   };
+
+Until the real backend exists, import fake data from
+src/lib/mock-data.ts (it will contain ~10 listings across the 5
+cities). When Taoufik's API is ready, he will swap the import for a
+real fetch — your UI does not change.
+
+
+NEXT.JS THINGS THAT WILL BITE YOU (read now, thank me later)
+-------------------------------------------------------------
+- A file is a "server component" by default. If you use useState,
+  onClick, useEffect, or any browser thing, put  "use client";  as the
+  FIRST line of that file.
+- Page files receive params/searchParams as PROMISES in Next 16:
+     export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+       const { id } = await params;
+     }
+- If a client component uses useSearchParams(), wrap it in <Suspense>
+  in the parent, or the build fails.
+- Use <Link href="/..."> from "next/link" for internal links, not <a>.
+- Use <Image> from "next/image" for photos (needs width/height or fill).
+- Dates: format them in one helper (src/lib/format.ts) so every page
+  shows dates the same way. Don't call new Date() inside JSX directly
+  — it causes "hydration mismatch" warnings.
+
+
+PROMPT-ENGINEERING TIPS (the actual point of the class)
+-------------------------------------------------------
+Good prompts to your AI assistant contain:
+  1. Context:   "Next.js 16 App Router, TypeScript, Tailwind. Here is
+                 the Listing type: <paste it>."
+  2. The task:  "Create src/components/ListingCard.tsx that shows..."
+  3. Constraints: "No external UI library. Must work on mobile.
+                 Use next/image for the photo."
+  4. Example:   paste one mock listing so it sees real data.
+  5. Iterate:   "Now make the rent bigger and add the city as a badge."
+
+Keep a file  tasks/prompts-<yourname>.md  where you paste the prompts
+that worked (and the ones that didn't). It's part of your grade AND
+it helps the next person.
+
+
+QUESTIONS?
+----------
+Ask Taoufik, or open a GitHub Issue on the repo with a screenshot.

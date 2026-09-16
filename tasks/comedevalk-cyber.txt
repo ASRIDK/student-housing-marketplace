@@ -1,0 +1,95 @@
+=====================================================================
+  TASK FOR: comedevalk-cyber  (Côme)
+  BRANCH:   come/listing-form
+  PAGES:    /listings/new          — post a new apartment
+            /listings/[id]/edit    — edit an existing one
+=====================================================================
+
+First read tasks/00-EVERYONE-READ-THIS-FIRST.txt.
+
+YOUR GOAL
+---------
+The form a student fills in to put their apartment online. One
+component, used twice: empty for "new", pre-filled for "edit". Your
+job is the FORM UI and its validation. Taoufik writes the API that
+saves it; you just call it.
+
+FILES YOU OWN
+-------------
+   src/components/ListingForm.tsx       the form (this is 90% of your work)
+   src/app/listings/new/page.tsx        renders <ListingForm />
+   src/app/listings/[id]/edit/page.tsx  renders <ListingForm initial={listing} />
+   src/lib/validation.ts                the rules (see below)
+
+WHAT TO BUILD — step by step
+----------------------------
+1. ListingForm ("use client") with these fields, in this order:
+     City             select: Milan / Madrid / Geneva / Paris / Marseille
+     Neighbourhood    text
+     Monthly rent     number  + Currency select (EUR / CHF)
+                      -> when city = Geneva auto-select CHF, else EUR
+     Rooms            number 1..10 (1 = studio)
+     Available from   date (required)
+     Available until  date (optional, checkbox "open-ended" disables it)
+     Description      textarea, 20..2000 characters, live counter
+     Photos           file input, multiple, images only, max 5.
+                      Show thumbnail previews before upload
+                      (URL.createObjectURL). DO NOT upload anywhere
+                      yet — Taoufik gives you an upload function
+                      later; leave // TODO(upload).
+   Submit button: "Publish" (new) or "Save changes" (edit).
+   Cancel link back to /my-listings.
+
+2. Validation (src/lib/validation.ts) — plain functions, no library:
+     - all fields required except availableUntil and photos
+     - rent > 0 and < 10000
+     - availableUntil must be after availableFrom
+     - description length 20..2000
+   Show the error under the field in red, only after the user leaves
+   the field or presses submit. Disable the button while submitting.
+
+3. Submitting
+   Build a plain object matching the Listing type (minus id, ownerId,
+   ownerName, ownerEmail, createdAt, status, photos — Taoufik's API
+   fills those). Then:
+     new:  await fetch("/api/listings",      { method: "POST", body: JSON.stringify(data) })
+     edit: await fetch(`/api/listings/${id}`,{ method: "PUT",  body: JSON.stringify(data) })
+   The API does not exist yet, so for now console.log(data) and show
+   a green "Saved! (fake)" message, then router.push("/my-listings").
+   Leave // TODO(api) comments. Keep the fetch code, commented out,
+   ready to switch on.
+
+4. Edit page
+   src/app/listings/[id]/edit/page.tsx: await params, find the
+   listing in mock-data, pass it as `initial` to ListingForm so the
+   fields are pre-filled. notFound() if missing.
+
+DONE WHEN
+---------
+[ ] /listings/new shows the whole form, looks good on phone + laptop
+[ ] Errors appear correctly, submit is blocked while invalid
+[ ] Geneva switches currency to CHF automatically
+[ ] "Open-ended" checkbox disables the until-date
+[ ] Photo previews appear when files are chosen (max 5)
+[ ] Submitting logs a correctly-shaped object and redirects
+[ ] /listings/<mock id>/edit is pre-filled
+[ ] `npm run build` passes, screenshots in the PR
+
+IF YOU FINISH EARLY (bonus)
+---------------------------
+- Save a draft to localStorage so a refresh doesn't lose the form
+- Drag-and-drop photos, reorder them (first one = cover)
+- A "preview" toggle that renders the form as a ListingCard
+  (Alejandro's component) live while typing
+
+PROMPT TO START WITH
+--------------------
+"Next.js 16 App Router, TypeScript, Tailwind, no form libraries.
+Here is the Listing type: <paste>. Create a client component
+src/components/ListingForm.tsx that takes an optional `initial?:
+Listing` prop. Fields: city select, neighbourhood, rent + currency
+select (auto CHF for Geneva), rooms, available from, available until
+with an open-ended checkbox, description with character counter,
+photo file input with previews (max 5). Validate with functions from
+'@/lib/validation' and show errors under fields. On submit, log the
+data object and redirect to /my-listings."

@@ -1,0 +1,51 @@
+=====================================================================
+  TASK FOR: Taoufik (lead / integrator)
+  BRANCH:   main  (+ short-lived feature branches if you like)
+=====================================================================
+
+Your part is the skeleton + everything the others leave as
+// TODO(auth) / TODO(api) / TODO(upload). Suggested order:
+
+WEEK 0 — SKELETON (merge this before anyone can start coding)
+   npx create-next-app@latest . --typescript --tailwind --app --src-dir --eslint
+   - src/lib/types.ts        (copy from 00-EVERYONE file, verbatim)
+   - src/lib/mock-data.ts    ~10 listings, 2 per city, 1 "taken",
+                             1 with photos: [] , 1 open-ended.
+                             Use https://picsum.photos/seed/<n>/800/600
+                             for photos and allow that host in
+                             next.config (images.remotePatterns).
+   - src/lib/format.ts       formatDate(), formatRent()
+   - .env.example
+   - Commit to main, push, tell everyone to `git merge main`.
+   - Create the GitHub repo, add the 4 students as collaborators,
+     protect main (require PR + 1 review).
+   - Connect the repo to Vercel so every PR gets a preview URL —
+     students can put the preview link in their PR instead of
+     screenshots.
+
+WEEK 1 — DATABASE + API
+   - Neon Postgres via Vercel Marketplace, Prisma schema = types.ts
+   - Route handlers:
+       GET    /api/listings            (filters: city, maxRent, from)
+       POST   /api/listings            (auth required)
+       GET    /api/listings/[id]
+       PUT    /api/listings/[id]       (owner only)
+       PATCH  /api/listings/[id]/status (owner only: active|taken)
+   - Replace the mock-data imports in the merged pages with real
+     queries (Server Components can call Prisma directly; keep the
+     route handlers for Côme's form).
+
+WEEK 2 — AUTH + PHOTOS
+   - Auth.js (next-auth v5) credentials provider, restrict signup to
+     the school email domain. Wire Andrea's AuthForm, Navbar
+     (session), Leo's /my-listings (real user), Côme's form (POST).
+   - Vercel Blob for photo upload; give Côme an uploadPhotos(files)
+     helper in src/lib/upload.ts.
+   - Note: Next 16 uses proxy.ts (not middleware.ts) for protecting
+     /listings/new, /my-listings, /listings/[id]/edit.
+
+INTEGRATION RULES
+   - Merge order: Andrea (layout) -> Alejandro -> Leo -> Côme.
+   - Review PRs against each student's "DONE WHEN" checklist.
+   - After each merge, post in the group: "main updated, please
+     `git merge main`".
