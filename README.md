@@ -34,8 +34,18 @@ Every student has a personal instruction file in `tasks/`.
 
 ```bash
 npm install
-cp .env.example .env.local   # ask Taoufik for the values
+cp .env.example .env.local   # ask Taoufik for the values (not needed yet — mock data only)
 npm run dev                  # http://localhost:3000
 ```
 
-(The `npm` commands only work once the skeleton is merged into `main`.)
+Before opening a pull request, make sure these all pass:
+
+```bash
+npm run lint        # code style
+npm run typecheck   # TypeScript
+npm test            # unit tests (Vitest)
+npm run build       # production build
+```
+
+Shared code lives in `src/lib/`: `types.ts` (the `Listing` shape), `mock-data.ts`
+(ten fake listings) and `format.ts` (`formatDate`, `formatRent`, `formatRooms`).

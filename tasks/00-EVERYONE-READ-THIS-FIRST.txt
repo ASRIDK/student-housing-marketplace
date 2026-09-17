@@ -30,16 +30,21 @@ TOOLS YOU NEED (install once)
 
 STEP 0 — GET THE CODE  (do this once)
 --------------------------------------
-   git clone <repo-url>        # Taoufik will send the URL
-   cd Project_1
+   git clone https://github.com/ASRIDK/student-housing-marketplace.git
+   cd student-housing-marketplace
    git checkout <your-branch>  # your branch name is in your task file
    git merge main              # pull in the latest skeleton from Taoufik
    npm install
    npm run dev                 # open http://localhost:3000
 
-If "npm install" fails because there is no package.json yet, the
-skeleton is not merged into main yet — ask Taoufik. Meanwhile you can
-still read your task and start writing the prompts you will use.
+You should see "StudentSwap — Skeleton is running" with a list of 9
+mock apartments. If not, ask Taoufik before going further.
+
+Before every pull request, run these four and fix anything red:
+   npm run lint
+   npm run typecheck
+   npm test
+   npm run build
 
 
 HOW TO WORK EVERY DAY
@@ -76,7 +81,7 @@ THE GOLDEN RULES
 5. Ask for help early. A 5-minute message beats 3 hours stuck.
 
 
-PROJECT STRUCTURE (after Taoufik merges the skeleton)
+PROJECT STRUCTURE
 -----------------------------------------------------
    src/app/               -> pages. Each folder = a URL.
    src/app/page.tsx       -> the home page  ("/")
