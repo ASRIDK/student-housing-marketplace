@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      // Placeholder photos used by src/lib/mock-data.ts
+      { protocol: "https", hostname: "picsum.photos" },
+    ],
+  },
 };
 
 export default nextConfig;
