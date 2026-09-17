@@ -1,6 +1,6 @@
 =====================================================================
   TASK FOR: comedevalk-cyber  (Côme)
-  BRANCH:   come/listing-form
+  BRANCH:   feature/listing-form
   PAGES:    /listings/new          — post a new apartment
             /listings/[id]/edit    — edit an existing one
 =====================================================================

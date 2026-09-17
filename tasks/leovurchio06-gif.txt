@@ -1,6 +1,6 @@
 =====================================================================
   TASK FOR: leovurchio06-gif  (Leo)
-  BRANCH:   leo/listing-detail
+  BRANCH:   feature/listing-detail
   PAGES:    /listings/[id]   — one apartment in full
             /my-listings     — the apartments I posted
 =====================================================================

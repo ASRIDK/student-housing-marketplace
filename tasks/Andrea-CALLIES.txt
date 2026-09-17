@@ -1,6 +1,6 @@
 =====================================================================
   TASK FOR: Andrea-CALLIES  (Andrea)
-  BRANCH:   andrea/layout-auth-ui
+  BRANCH:   feature/layout-auth-ui
   PAGES:    every page (layout, navbar, footer)
             /login  and  /signup   (the forms, not the logic)
 =====================================================================

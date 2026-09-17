@@ -1,6 +1,6 @@
 =====================================================================
   TASK FOR: alejandromirandadefrutos7-sudo  (Alejandro)
-  BRANCH:   alejandro/browse-listings
+  BRANCH:   feature/browse-listings
   PAGE:     Home page  "/"  — browse all listings + filters
 =====================================================================
 
