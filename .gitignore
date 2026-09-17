@@ -18,3 +18,4 @@ build/
 *.log
 .vercel
 .omc/
+*.tsbuildinfo
