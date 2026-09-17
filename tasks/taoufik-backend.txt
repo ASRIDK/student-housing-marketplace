@@ -6,7 +6,7 @@
 Your part is the skeleton + everything the others leave as
 // TODO(auth) / TODO(api) / TODO(upload). Suggested order:
 
-WEEK 0 — SKELETON (merge this before anyone can start coding)
+WEEK 0 — SKELETON (done: PR #1)
    npx create-next-app@latest . --typescript --tailwind --app --src-dir --eslint
    - src/lib/types.ts        (copy from 00-EVERYONE file, verbatim)
    - src/lib/mock-data.ts    ~10 listings, 2 per city, 1 "taken",
