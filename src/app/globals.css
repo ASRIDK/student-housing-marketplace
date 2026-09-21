@@ -4,19 +4,62 @@
   Design tokens. Andrea owns this file — define the primary/accent
   colours and the site font here (see tasks/Andrea-CALLIES.txt) and
   document the choices in this comment so everyone follows them.
+
+  DESIGN CHOICES
+  - Inspired by Albert School's student platform: dark navy base,
+    sky-blue accent, coral secondary.
+  - Two themes: light (default) and dark (toggle adds .dark on <html>).
+  - Font: Manrope (sans-serif), loaded via next/font in layout.tsx.
+  - One colour per city for CityBadge: Milan, Madrid, Geneva, Paris,
+    Marseille — reused by everyone via CityBadge, don't invent new ones.
 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --foreground: #111827;
+  --surface: #ffffff;
+  --primary: #12172a;
+  --accent: #2b8fcc;
+  --secondary: #e85a6a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+
+  --city-milan: #f0a64d;
+  --city-madrid: #e85a6a;
+  --city-geneva: #2b8fcc;
+  --city-paris: #b98ce8;
+  --city-marseille: #3fbf9a;
+}
+
+.dark {
+  --background: #0b0f1c;
+  --foreground: #f5f5f5;
+  --surface: #161c30;
+  --primary: #12172a;
+  --accent: #5ec8f0;
+  --secondary: #f16b7a;
+  --muted: #9ca3af;
+  --border: #252c42;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --color-city-milan: var(--city-milan);
+  --color-city-madrid: var(--city-madrid);
+  --color-city-geneva: var(--city-geneva);
+  --color-city-paris: var(--city-paris);
+  --color-city-marseille: var(--city-marseille);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
