@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { mockListings } from "@/lib/mock-data";
+import { getListingsByOwner } from "@/lib/listings";
 import MyListingRow from "@/components/MyListingRow";
 
 export const metadata: Metadata = {
   title: "My listings",
 };
 
-export default function MyListingsPage() {
-  // TODO(auth): replace with the real logged-in user id from the session.
-  // For now we pretend the logged-in user owns the first mock listing.
-  const currentUserId = mockListings[0].ownerId;
+// Reads the database on every request — never prerendered at build time.
+export const dynamic = "force-dynamic";
 
-  const myListings = mockListings.filter(
-    (listing) => listing.ownerId === currentUserId,
-  );
+export default async function MyListingsPage() {
+  // TODO(auth): replace with the real logged-in user id from the session.
+  // For now we pretend the logged-in user is the first seeded user.
+  const currentUserId = "u-1";
+
+  const myListings = await getListingsByOwner(currentUserId);
 
   return (
     <div className="mx-auto max-w-4xl">
