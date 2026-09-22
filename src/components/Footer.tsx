@@ -1,6 +1,5 @@
 import Link from "next/link";
-
-const CITIES = ["Milan", "Madrid", "Geneva", "Paris", "Marseille"] as const;
+import { CITIES } from "@/lib/types";
 
 export default function Footer() {
   return (
