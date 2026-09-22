@@ -1,0 +1,64 @@
+// Database schema. Mirrors the shared types in src/lib/types.ts — if you
+// change one, change the other and run `npm run db:migrate`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum City {
+  Milan
+  Madrid
+  Geneva
+  Paris
+  Marseille
+}
+
+enum Currency {
+  EUR
+  CHF
+}
+
+enum ListingStatus {
+  active
+  taken
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  // Filled in by the auth work (Week 2). Nullable so seeded users exist
+  // before anyone can log in.
+  passwordHash String?
+  createdAt    DateTime  @default(now())
+  listings     Listing[]
+
+  @@map("users")
+}
+
+model Listing {
+  id             String        @id @default(cuid())
+  owner          User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId        String
+  city           City
+  neighbourhood  String
+  rent           Int
+  currency       Currency
+  availableFrom  DateTime      @db.Date
+  availableUntil DateTime?     @db.Date
+  rooms          Int
+  description    String
+  photos         String[]      @default([])
+  status         ListingStatus @default(active)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([city, status])
+  @@index([ownerId])
+  @@map("listings")
+}
