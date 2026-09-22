@@ -34,7 +34,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     : `From ${formatDate(listing.availableFrom)} – open-ended`;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <div>
       {isTaken && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           This apartment has already been taken
@@ -73,6 +73,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 }

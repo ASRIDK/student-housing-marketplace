@@ -9,7 +9,7 @@ export default function Home() {
   const active = mockListings.filter((listing) => listing.status === "active");
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12">
+    <div className="mx-auto max-w-3xl">
       <h1 className="text-3xl font-semibold">StudentSwap</h1>
       <p className="mt-2 text-zinc-600">
         Skeleton is running. {active.length} mock apartments loaded — each
@@ -34,6 +34,6 @@ export default function Home() {
           </li>
         ))}
       </ul>
-    </main>
+    </div>
   );
 }

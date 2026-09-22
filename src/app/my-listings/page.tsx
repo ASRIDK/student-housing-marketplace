@@ -17,7 +17,7 @@ export default function MyListingsPage() {
   );
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
           My listings
@@ -47,6 +47,6 @@ export default function MyListingsPage() {
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }
