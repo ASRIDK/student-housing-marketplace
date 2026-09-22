@@ -4,6 +4,8 @@ import { getMockListing } from "@/lib/mock-data";
 import { formatDate, formatRent, formatRooms } from "@/lib/format";
 import PhotoGallery from "@/components/PhotoGallery";
 import ContactCard from "@/components/ContactCard";
+import ShareButton from "@/components/ShareButton";
+import AvailabilityCountdown from "@/components/AvailabilityCountdown";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -46,6 +48,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <h1 className="mt-6 text-2xl font-semibold tracking-tight text-neutral-900">
             {title}
           </h1>
+          <ShareButton />
 
           <p className="mt-2 text-xl font-medium text-neutral-900">
             {formatRent(listing.rent, listing.currency)}
@@ -54,6 +57,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <p className="mt-3 text-sm text-neutral-600">
             <span className="font-medium text-neutral-800">Available:</span> {availability}
           </p>
+          <AvailabilityCountdown availableFrom={listing.availableFrom} />
 
           <p className="mt-6 whitespace-pre-line leading-relaxed text-neutral-700">
             {listing.description}
