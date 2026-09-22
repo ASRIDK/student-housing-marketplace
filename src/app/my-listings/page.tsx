@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function MyListingsPage() {
   // TODO(auth): replace with the real logged-in user id from the session.
   // For now we pretend the logged-in user owns the first mock listing.
-      const currentUserId = mockListings[0].ownerId;
+  const currentUserId = mockListings[0].ownerId;
 
   const myListings = mockListings.filter(
     (listing) => listing.ownerId === currentUserId,
