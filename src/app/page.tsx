@@ -1,54 +1,19 @@
-// Placeholder home page. Alejandro replaces this file with the real
-// browse page (see tasks/alejandromirandadefrutos7-sudo.txt). It only
-// proves that the database and helpers load.
-
-import { getListings } from "@/lib/listings";
-import { formatDate, formatRent, formatRooms } from "@/lib/format";
-
-// Reads the database on every request — never prerendered at build time.
-export const dynamic = "force-dynamic";
-
-export default async function Home() {
-  const active = await getListings();
-
-  return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-3xl font-semibold">StudentSwap</h1>
-      <p className="mt-2 text-zinc-600">
-        Skeleton is running. {active.length} apartments loaded from the
-        database — each student now builds their page on their own branch
-        (see the <code>tasks/</code> folder).
-      </p>
-
-      <ul className="mt-8 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
-        {active.map((listing) => (
-          <li key={listing.id} className="flex justify-between gap-4 p-4">
-            <div>
-              <p className="font-medium">
-                {formatRooms(listing.rooms)} in {listing.neighbourhood}, {listing.city}
-              </p>
-              <p className="text-sm text-zinc-500">
-                Available from {formatDate(listing.availableFrom)}
-              </p>
-            </div>
-            <p className="whitespace-nowrap font-medium">
-              {formatRent(listing.rent, listing.currency)}
-            </p>
-          </li>
-        ))}
-      </ul>
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import FilterBar from "@/components/FilterBar";
 import ListingCard from "@/components/ListingCard";
 import EmptyState from "@/components/EmptyState";
 import CityTabs from "@/components/CityTabs";
-import { mockListings } from "@/lib/mock-data";
-import type { City } from "@/lib/types";
+import FeaturedWheel from "@/components/FeaturedWheel";
+import { getListings } from "@/lib/listings";
+import { CITIES, type City } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: { absolute: "StudentSwap — find your next apartment" },
+  title: { absolute: "StudentSwap — take over a classmate's apartment" },
 };
+
+// Reads the database on every request — never prerendered at build time.
+export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{
   city?: string;
@@ -63,96 +28,117 @@ function isRecent(createdAt: string): boolean {
   return Date.now() - new Date(createdAt).getTime() < NEW_WINDOW_MS;
 }
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+/** Ignore anything that is not one of our five cities or three sort modes. */
+function asCity(value: string | undefined): City | undefined {
+  return CITIES.includes(value as City) ? (value as City) : undefined;
+}
+
+function asSort(value: string | undefined) {
+  return value === "cheapest" || value === "expensive" ? value : "newest";
+}
+
+export default async function Home({ searchParams }: { searchParams: SearchParams }) {
   const { city, maxRent, availableFrom, sort } = await searchParams;
 
-  const withoutCity = mockListings
-    .filter((listing) => listing.status === "active")
-    .filter((listing) => !maxRent || listing.rent <= Number(maxRent))
-    .filter(
-      (listing) => !availableFrom || listing.availableFrom <= availableFrom,
-    );
+  // Fetched without the city filter so each campus tab can show a count.
+  const withoutCity = await getListings({
+    maxRent: maxRent ? Number(maxRent) : undefined,
+    availableFrom: availableFrom || undefined,
+    sort: asSort(sort),
+  });
 
   const cityCounts: Partial<Record<City, number>> = {};
   for (const listing of withoutCity) {
     cityCounts[listing.city] = (cityCounts[listing.city] ?? 0) + 1;
   }
 
-  const filtered = withoutCity
-    .filter((listing) => !city || listing.city === (city as City))
-    .sort((a, b) => {
-      if (sort === "cheapest") return a.rent - b.rent;
-      if (sort === "expensive") return b.rent - a.rent;
-      return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    });
+  const selectedCity = asCity(city);
+  const listings = selectedCity
+    ? withoutCity.filter((listing) => listing.city === selectedCity)
+    : withoutCity;
+
+  // The hero wheel always shows the four newest places, whatever is filtered
+  // below, and always with a photo — a blank card would turn to nothing.
+  const featured = (await getListings({ sort: "newest" }))
+    .filter((listing) => listing.photos.length > 0)
+    .slice(0, 4)
+    .map((listing) => ({
+      title: `${listing.neighbourhood}, ${listing.city}`,
+      image: listing.photos[0],
+      href: `/listings/${listing.id}`,
+    }));
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-3xl font-semibold">StudentSwap</h1>
-      <p className="mt-2 text-zinc-600">
-        Skeleton is running. {active.length} mock apartments loaded — each
-        student now builds their page on their own branch (see the{" "}
-        <code>tasks/</code> folder).
-      </p>
-
-      <ul className="mt-8 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
-        {active.map((listing) => (
-          <li key={listing.id} className="flex justify-between gap-4 p-4">
-            <div>
-              <p className="font-medium">
-                {formatRooms(listing.rooms)} in {listing.neighbourhood}, {listing.city}
-              </p>
-              <p className="text-sm text-zinc-500">
-                Available from {formatDate(listing.availableFrom)}
-              </p>
-            </div>
-            <p className="whitespace-nowrap font-medium">
-              {formatRent(listing.rent, listing.currency)}
+    <>
+      {/* The hero fills the screen: the pitch on one side, the wheel on the
+          other, both centred on the same line. */}
+      <section className="bg-navy">
+        <div className="mx-auto grid min-h-[100svh] max-w-6xl content-center items-center gap-10 px-5 pb-28 pt-8 sm:px-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-14">
+          <div>
+            <h1 className="display text-4xl font-extrabold text-white sm:text-5xl">
+              Someone is leaving your campus. Take their keys.
+            </h1>
+            <p className="mt-5 text-base leading-relaxed text-white/70">
+              Apartments handed over student to student in Milan, Madrid,
+              Geneva, Paris and Marseille. You get the place, the landlord keeps
+              a tenant, nobody pays an agency.
             </p>
-          </li>
-        ))}
-      </ul>
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="mb-6 text-2xl font-semibold text-zinc-900">
-        Find your next apartment
-      </h1>
+          </div>
 
-      <Suspense
-        fallback={<div className="mb-6 h-[76px] rounded-xl bg-zinc-100" />}
-      >
-        <FilterBar key={`${city}|${maxRent}|${availableFrom}|${sort}`} />
-      </Suspense>
+          {/* Scroll over it, drag it, or use the arrow keys; each card opens
+              that listing. The ring is about 3.3 card-heights tall and the card
+              is sized off the stage, so the stage needs to be taller than it is
+              wide or the top and bottom of the ring get clipped.
 
-      <CityTabs
-        counts={cityCounts}
-        total={withoutCity.length}
-        current={city}
-        params={{ maxRent, availableFrom, sort }}
-      />
-
-      <p className="mb-4 text-sm text-zinc-600">
-        {filtered.length} apartment{filtered.length === 1 ? "" : "s"}
-      </p>
-
-      {filtered.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              isNew={isRecent(listing.createdAt)}
-            />
-          ))}
+              Phones get the plain hero instead: the wheel sizes its type off
+              the card, the card is capped by the stage width, and at 390px that
+              leaves the labels at about 4px — the grid below already shows
+              these same places at a readable size. */}
+          <div className="on-navy hidden h-[34rem] w-full sm:block xl:h-[38rem]">
+            <FeaturedWheel items={featured} />
+          </div>
         </div>
-      )}
-    </div>
+      </section>
+
+      {/* The search panel straddles the hero edge, the way a booking site's
+          search bar does. */}
+      <div className="mx-auto -mt-12 max-w-4xl px-5 sm:-mt-9 sm:px-8">
+        <Suspense fallback={<div className="h-[76px] rounded-full bg-white shadow-lg" />}>
+          <FilterBar />
+        </Suspense>
+      </div>
+
+      <section className="mx-auto max-w-6xl px-5 pt-10 sm:px-8">
+        <CityTabs
+          counts={cityCounts}
+          total={withoutCity.length}
+          current={selectedCity}
+          params={{ maxRent, availableFrom, sort }}
+        />
+
+        <div className="mt-8 flex items-baseline justify-between gap-4">
+          <h2 className="title text-lg font-bold text-navy">
+            {selectedCity ? `Apartments in ${selectedCity}` : "All apartments"}
+          </h2>
+          <p className="text-sm text-slate">
+            {listings.length} {listings.length === 1 ? "place" : "places"}
+          </p>
+        </div>
+
+        {listings.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                isNew={isRecent(listing.createdAt)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
   );
 }

@@ -1,12 +1,15 @@
+import type { Metadata } from "next";
 import ListingForm from "@/components/ListingForm";
+
+export const metadata: Metadata = {
+  title: "Post a listing",
+};
 
 export default function NewListingPage() {
   return (
-    <main>
-      <h1 className="mx-auto max-w-xl px-4 pt-8 text-2xl font-semibold">
-        Post a listing
-      </h1>
+    <div className="mx-auto max-w-xl px-5 py-10 sm:px-8">
+      <h1 className="display text-3xl font-extrabold text-navy">Post a listing</h1>
       <ListingForm />
-    </main>
+    </div>
   );
 }

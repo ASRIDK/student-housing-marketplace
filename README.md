@@ -51,6 +51,36 @@ npm test            # unit tests (Vitest)
 npm run build       # production build
 ```
 
+## Design system
+
+The site uses Albert School's own colours (taken from albertschool.com) with a
+photo-first, marketplace-style layout. All tokens live at the top of
+`src/app/globals.css` — use the Tailwind classes, never a raw hex.
+
+| Token | Hex | Class | Use it for |
+|---|---|---|---|
+| navy | `#202448` | `bg-navy` `text-navy` | navbar, footer, headings, primary buttons |
+| sky | `#2eaee0` | `bg-sky` | only things you can act on, focus rings |
+| deep | `#035ca0` | `text-deep` | text links and hover states |
+| mist | `#eaeff6` | `bg-mist` | quiet grounds, chips, image placeholders |
+| ink | `#12142b` | `text-ink` | body text |
+| slate | `#5b6480` | `text-slate` | secondary text |
+| line | `#dfe4ee` | `border-line` | borders and dividers |
+
+Rules everyone follows:
+
+- **Blue means action.** Never colour plain text `sky` — if it is blue, it is
+  clickable.
+- **One font.** Inter, self-hosted in `src/app/fonts` (no Google Fonts call at
+  build time). Hierarchy comes from weight and size: add `display` to big
+  headings and `title` to section headings for the right letter-spacing.
+- **The layout owns the shell.** `layout.tsx` renders the only `<main>`; each
+  page sets its own width and padding (`mx-auto max-w-6xl px-5 sm:px-8`).
+- **One badge per campus.** Use `<CityBadge city={...} />`, don't invent
+  colours.
+- **Rounded, not shadowed.** Cards use `rounded-2xl`/`rounded-3xl` and a
+  border; keep shadows for things that float above the page.
+
 Shared code lives in `src/lib/`: `types.ts` (the `Listing` shape), `format.ts`
 (`formatDate`, `formatRent`, `formatRooms`), `listings.ts` (every database
 query) and `mock-data.ts` (the ten listings used to seed the database).

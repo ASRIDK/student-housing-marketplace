@@ -3,15 +3,15 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { City, Currency, Listing } from "@/lib/types";
+import { CITIES, type City, type Currency, type Listing } from "@/lib/types";
 import {
   validateListingForm,
   isListingFormValid,
   type ListingFormValues,
   type ListingFormErrors,
 } from "@/lib/validation";
+import { devUserHeader } from "@/lib/dev-user";
 
-const CITIES: City[] = ["Milan", "Madrid", "Geneva", "Paris", "Marseille"];
 const CURRENCIES: Currency[] = ["EUR", "CHF"];
 const MAX_PHOTOS = 5;
 const MAX_DESCRIPTION = 2000;
@@ -110,12 +110,18 @@ export default function ListingForm({ initial }: ListingFormProps) {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>();
 
   const [existingPhotoUrls] = useState<string[]>(initial?.photos ?? []);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [photoError, setPhotoError] = useState<string | undefined>();
   const photosRef = useRef<PhotoPreview[]>([]);
-  photosRef.current = photos;
+
+  // Keep the ref in sync in an effect (never during render) so the cleanup
+  // below can revoke the preview URLs of whatever is on screen at unmount.
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
   useEffect(() => {
     return () => {
@@ -217,43 +223,51 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
     // TODO(upload): send `photos` (File[]) to Taoufik's upload function
     // once it exists, then include the resulting URLs in `data.photos`.
+    const body = { ...data, photos: existingPhotoUrls };
 
-    // TODO(api): swap the console.log below for the real call once
-    // Taoufik's API route is ready.
-    //
-    // const response = isEdit
-    //   ? await fetch(`/api/listings/${initial!.id}`, {
-    //       method: "PUT",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(data),
-    //     })
-    //   : await fetch("/api/listings", {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(data),
-    //     });
+    const response = isEdit
+      ? await fetch(`/api/listings/${initial!.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...devUserHeader() },
+          body: JSON.stringify(body),
+        })
+      : await fetch("/api/listings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...devUserHeader() },
+          body: JSON.stringify(body),
+        });
 
-    console.log(data);
-
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({}));
+      setIsSubmitting(false);
+      setSubmitError(problem.error ?? "Something went wrong. Please try again.");
+      return;
+    }
 
     setIsSubmitting(false);
     setSavedMessage(true);
     clearDraft(storageKey);
     router.push("/my-listings");
+    router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-xl space-y-6 p-4">
+    <form onSubmit={handleSubmit} className="mt-7 space-y-6">
       {savedMessage && (
-        <p className="rounded-md bg-green-100 p-3 text-sm text-green-800">
-          Saved! (fake)
+        <p className="rounded-xl bg-positive/10 px-4 py-3 text-sm font-medium text-positive">
+          Saved!
+        </p>
+      )}
+
+      {submitError && (
+        <p role="alert" className="rounded-xl bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+          {submitError}
         </p>
       )}
 
       {/* City */}
       <div>
-        <label htmlFor="city" className="block text-sm font-medium">
+        <label htmlFor="city" className="block text-sm font-medium text-navy">
           City
         </label>
         <select
@@ -261,7 +275,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
           value={values.city}
           onChange={(e) => handleCityChange(e.target.value as City)}
           onBlur={() => handleBlur("city")}
-          className="mt-1 w-full rounded-md border border-gray-300 p-2"
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky"
         >
           <option value="">Select a city…</option>
           {CITIES.map((city) => (
@@ -271,13 +285,13 @@ export default function ListingForm({ initial }: ListingFormProps) {
           ))}
         </select>
         {showError("city") && (
-          <p className="mt-1 text-sm text-red-600">{showError("city")}</p>
+          <p className="mt-1.5 text-xs text-danger">{showError("city")}</p>
         )}
       </div>
 
       {/* Neighbourhood */}
       <div>
-        <label htmlFor="neighbourhood" className="block text-sm font-medium">
+        <label htmlFor="neighbourhood" className="block text-sm font-medium text-navy">
           Neighbourhood
         </label>
         <input
@@ -287,10 +301,10 @@ export default function ListingForm({ initial }: ListingFormProps) {
           onChange={(e) => setField("neighbourhood", e.target.value)}
           onBlur={() => handleBlur("neighbourhood")}
           placeholder="e.g. Navigli"
-          className="mt-1 w-full rounded-md border border-gray-300 p-2"
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky"
         />
         {showError("neighbourhood") && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1.5 text-xs text-danger">
             {showError("neighbourhood")}
           </p>
         )}
@@ -298,10 +312,10 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
       {/* Rent + currency */}
       <div>
-        <label htmlFor="rent" className="block text-sm font-medium">
+        <label htmlFor="rent" className="block text-sm font-medium text-navy">
           Monthly rent
         </label>
-        <div className="mt-1 flex gap-2">
+        <div className="mt-1.5 flex gap-2">
           <input
             id="rent"
             type="number"
@@ -309,13 +323,13 @@ export default function ListingForm({ initial }: ListingFormProps) {
             value={values.rent}
             onChange={(e) => setField("rent", e.target.value)}
             onBlur={() => handleBlur("rent")}
-            className="w-full rounded-md border border-gray-300 p-2"
+            className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky mt-0"
           />
           <select
             aria-label="Currency"
             value={values.currency}
             onChange={(e) => setField("currency", e.target.value as Currency)}
-            className="rounded-md border border-gray-300 p-2"
+            className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky mt-0 w-auto"
           >
             {CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
@@ -325,13 +339,13 @@ export default function ListingForm({ initial }: ListingFormProps) {
           </select>
         </div>
         {showError("rent") && (
-          <p className="mt-1 text-sm text-red-600">{showError("rent")}</p>
+          <p className="mt-1.5 text-xs text-danger">{showError("rent")}</p>
         )}
       </div>
 
       {/* Rooms */}
       <div>
-        <label htmlFor="rooms" className="block text-sm font-medium">
+        <label htmlFor="rooms" className="block text-sm font-medium text-navy">
           Rooms
         </label>
         <input
@@ -343,16 +357,16 @@ export default function ListingForm({ initial }: ListingFormProps) {
           onChange={(e) => setField("rooms", e.target.value)}
           onBlur={() => handleBlur("rooms")}
           placeholder="1 = studio"
-          className="mt-1 w-full rounded-md border border-gray-300 p-2"
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky"
         />
         {showError("rooms") && (
-          <p className="mt-1 text-sm text-red-600">{showError("rooms")}</p>
+          <p className="mt-1.5 text-xs text-danger">{showError("rooms")}</p>
         )}
       </div>
 
       {/* Available from */}
       <div>
-        <label htmlFor="availableFrom" className="block text-sm font-medium">
+        <label htmlFor="availableFrom" className="block text-sm font-medium text-navy">
           Available from
         </label>
         <input
@@ -361,10 +375,10 @@ export default function ListingForm({ initial }: ListingFormProps) {
           value={values.availableFrom}
           onChange={(e) => setField("availableFrom", e.target.value)}
           onBlur={() => handleBlur("availableFrom")}
-          className="mt-1 w-full rounded-md border border-gray-300 p-2"
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky"
         />
         {showError("availableFrom") && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1.5 text-xs text-danger">
             {showError("availableFrom")}
           </p>
         )}
@@ -372,7 +386,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
       {/* Available until */}
       <div>
-        <label htmlFor="availableUntil" className="block text-sm font-medium">
+        <label htmlFor="availableUntil" className="block text-sm font-medium text-navy">
           Available until
         </label>
         <input
@@ -382,9 +396,9 @@ export default function ListingForm({ initial }: ListingFormProps) {
           disabled={values.openEnded}
           onChange={(e) => setField("availableUntil", e.target.value)}
           onBlur={() => handleBlur("availableUntil")}
-          className="mt-1 w-full rounded-md border border-gray-300 p-2 disabled:bg-gray-100"
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky disabled:bg-mist disabled:text-slate"
         />
-        <label className="mt-2 flex items-center gap-2 text-sm">
+        <label className="mt-2.5 flex items-center gap-2 text-sm text-slate">
           <input
             type="checkbox"
             checked={values.openEnded}
@@ -393,7 +407,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
           Open-ended
         </label>
         {showError("availableUntil") && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1.5 text-xs text-danger">
             {showError("availableUntil")}
           </p>
         )}
@@ -401,7 +415,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
       {/* Description */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium">
+        <label htmlFor="description" className="block text-sm font-medium text-navy">
           Description
         </label>
         <textarea
@@ -411,11 +425,11 @@ export default function ListingForm({ initial }: ListingFormProps) {
           value={values.description}
           onChange={(e) => setField("description", e.target.value)}
           onBlur={() => handleBlur("description")}
-          className="mt-1 w-full rounded-md border border-gray-300 p-2"
+          className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky"
         />
-        <div className="mt-1 flex justify-between text-sm">
-          <span className="text-red-600">{showError("description")}</span>
-          <span className="text-gray-500">
+        <div className="mt-1.5 flex justify-between text-xs text-slate">
+          <span className="text-danger">{showError("description")}</span>
+          <span className="text-slate">
             {values.description.length}/{MAX_DESCRIPTION}
           </span>
         </div>
@@ -423,7 +437,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
       {/* Photos */}
       <div>
-        <label htmlFor="photos" className="block text-sm font-medium">
+        <label htmlFor="photos" className="block text-sm font-medium text-navy">
           Photos
         </label>
         <input
@@ -435,11 +449,11 @@ export default function ListingForm({ initial }: ListingFormProps) {
           onChange={(e) => handlePhotosChange(e.target.files, e.target)}
           className="mt-1 w-full text-sm"
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1.5 text-xs text-slate">
           Up to {MAX_PHOTOS} images. {/* TODO(upload) */}
         </p>
         {photoError && (
-          <p className="mt-1 text-sm text-red-600">{photoError}</p>
+          <p className="mt-1.5 text-xs text-danger">{photoError}</p>
         )}
 
         {(existingPhotoUrls.length > 0 || photos.length > 0) && (
@@ -450,7 +464,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
                 key={url}
                 src={url}
                 alt="Existing listing photo"
-                className="h-20 w-20 rounded-md object-cover"
+                className="h-20 w-20 rounded-xl object-cover"
               />
             ))}
             {photos.map((photo) => (
@@ -459,12 +473,12 @@ export default function ListingForm({ initial }: ListingFormProps) {
                 <img
                   src={photo.url}
                   alt="New listing photo preview"
-                  className="h-20 w-20 rounded-md object-cover"
+                  className="h-20 w-20 rounded-xl object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => removePhoto(photo.url)}
-                  className="absolute -right-1 -top-1 rounded-full bg-gray-900/80 px-1.5 text-xs text-white"
+                  className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-navy text-xs text-white"
                   aria-label="Remove photo"
                 >
                   ×
@@ -476,11 +490,11 @@ export default function ListingForm({ initial }: ListingFormProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4 pt-2">
+      <div className="flex flex-wrap items-center gap-4 border-t border-line pt-6">
         <button
           type="submit"
           disabled={!formValid || isSubmitting}
-          className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+          className="rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white transition hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isSubmitting
             ? "Saving…"
@@ -491,7 +505,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
         <Link
           href="/my-listings"
           onClick={() => clearDraft(storageKey)}
-          className="text-sm text-gray-600 underline"
+          className="text-sm font-medium text-deep underline underline-offset-4"
         >
           Cancel
         </Link>

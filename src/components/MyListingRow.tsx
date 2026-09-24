@@ -2,69 +2,105 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { Listing } from "@/lib/types";
-import { formatRent } from "@/lib/format";
+import { formatAmount, formatWindow } from "@/lib/format";
+import { devUserHeader } from "@/lib/dev-user";
 
 type MyListingRowProps = {
   listing: Listing;
 };
 
+/** One of your own apartments, with the two things you can do to it. */
 export default function MyListingRow({ listing }: MyListingRowProps) {
+  const router = useRouter();
   const thumb = listing.photos[0];
   const isTaken = listing.status === "taken";
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
-  function handleMarkAsTaken() {
-    // TODO(api): call the real endpoint to update this listing's status.
-    console.log("mark as taken:", listing.id);
+  async function handleMarkAsTaken() {
+    setIsSaving(true);
+    setError(undefined);
+
+    const response = await fetch(`/api/listings/${listing.id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...devUserHeader() },
+      body: JSON.stringify({ status: "taken" }),
+    });
+
+    setIsSaving(false);
+
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({}));
+      setError(problem.error ?? "Could not update this listing. Try again.");
+      return;
+    }
+
+    router.refresh();
   }
 
   return (
-    <li className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-      <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+    <li className="flex flex-wrap items-center gap-4 p-4">
+      <Link
+        href={`/listings/${listing.id}`}
+        className="relative h-16 w-24 shrink-0 overflow-hidden rounded-xl bg-mist"
+      >
         {thumb ? (
           <Image src={thumb} alt="" fill sizes="96px" className="object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-neutral-400">
+          <span className="grid h-full place-items-center text-xs text-slate">
             No photo
-          </div>
+          </span>
         )}
-      </div>
+      </Link>
 
       <div className="min-w-0 flex-1">
-        <p className="font-medium text-neutral-900">
+        <Link
+          href={`/listings/${listing.id}`}
+          className="title block truncate font-semibold text-navy hover:text-deep"
+        >
           {listing.neighbourhood}, {listing.city}
-        </p>
-        <p className="text-sm text-neutral-500">
-          {formatRent(listing.rent, listing.currency)}
+        </Link>
+        <p className="mt-0.5 text-sm text-slate">
+          {formatAmount(listing.rent, listing.currency)} / month ·{" "}
+          {formatWindow(listing.availableFrom, listing.availableUntil)}
         </p>
       </div>
 
       <span
-        className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        className={
           isTaken
-            ? "bg-neutral-200 text-neutral-600"
-            : "bg-green-100 text-green-700"
-        }`}
+            ? "shrink-0 rounded-full bg-mist px-3 py-1 text-xs font-semibold text-slate"
+            : "shrink-0 rounded-full bg-positive/10 px-3 py-1 text-xs font-semibold text-positive"
+        }
       >
-        {isTaken ? "Taken" : "Active"}
+        {isTaken ? "Taken" : "Live"}
       </span>
 
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <Link
           href={`/listings/${listing.id}/edit`}
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
+          className="rounded-full border border-line px-4 py-2 text-sm font-medium text-navy transition hover:border-navy"
         >
           Edit
         </Link>
         <button
           type="button"
           onClick={handleMarkAsTaken}
-          disabled={isTaken}
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={isTaken || isSaving}
+          className="rounded-full border border-line px-4 py-2 text-sm font-medium text-navy transition hover:border-navy disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Mark as taken
+          {isSaving ? "Saving…" : "Mark as taken"}
         </button>
       </div>
+
+      {error && (
+        <p role="alert" className="w-full text-sm text-danger">
+          {error}
+        </p>
+      )}
     </li>
   );
 }

@@ -2,18 +2,19 @@ import Link from "next/link";
 
 export default function ListingNotFound() {
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center text-center">
-      <p className="text-5xl" aria-hidden>🏠</p>
-      <h1 className="mt-4 text-2xl font-semibold">This listing doesn&apos;t exist</h1>
-      <p className="mt-2 text-neutral-600">
-        The apartment you&apos;re looking for may have been taken over already, or the
-        link is wrong.
+    <div className="mx-auto flex min-h-[55vh] max-w-lg flex-col items-center justify-center px-5 text-center">
+      <h1 className="display text-3xl font-extrabold text-navy">
+        That apartment is not here
+      </h1>
+      <p className="mt-3 leading-relaxed text-slate">
+        It may have been taken over and removed, or the link picked up a typo
+        on the way.
       </p>
       <Link
         href="/"
-        className="mt-6 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+        className="mt-7 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white transition hover:bg-navy-700"
       >
-        Back to listings
+        Browse the apartments
       </Link>
     </div>
   );

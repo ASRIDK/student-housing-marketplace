@@ -3,32 +3,24 @@ import { CITIES } from "@/lib/types";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[var(--border)] bg-[var(--primary)] text-white/80">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 md:flex-row md:items-start md:justify-between">
+    <footer className="mt-20 border-t border-line bg-mist">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <p className="text-lg font-bold text-white">StudentSwap</p>
-          <p className="mt-1 text-sm">
-            Made by Andrea, Alejandro, Leo, Côme &amp; Taoufik for the Data
-            Science class 2026.
+          <p className="title text-base font-extrabold text-navy">StudentSwap</p>
+          <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate">
+            Albert School students hand their apartment to the next student
+            moving to their campus. No agency, no deposit games.
           </p>
-          <a
-            href="https://github.com/ASRIDK/student-housing-marketplace"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
-          >
-            View on GitHub
-          </a>
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-white">Campuses</p>
-          <ul className="mt-2 flex flex-wrap gap-3">
+          <h2 className="text-sm font-semibold text-navy">Campuses</h2>
+          <ul className="mt-3 space-y-2">
             {CITIES.map((city) => (
               <li key={city}>
                 <Link
                   href={`/?city=${city}`}
-                  className="text-sm text-white/80 hover:text-white"
+                  className="text-sm text-slate transition hover:text-deep"
                 >
                   {city}
                 </Link>
@@ -36,6 +28,44 @@ export default function Footer() {
             ))}
           </ul>
         </div>
+
+        <div>
+          <h2 className="text-sm font-semibold text-navy">The project</h2>
+          <ul className="mt-3 space-y-2">
+            <li>
+              <Link href="/about" className="text-sm text-slate transition hover:text-deep">
+                How it works
+              </Link>
+            </li>
+            <li>
+              <a
+                href="https://github.com/ASRIDK/student-housing-marketplace"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-slate transition hover:text-deep"
+              >
+                Source on GitHub
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://albertschool.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-slate transition hover:text-deep"
+              >
+                Albert School
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-line">
+        <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-slate sm:px-8">
+          Built by Andrea, Alejandro, Leo, Côme and Taoufik — Albert School,
+          Data &amp; AI, 2026.
+        </p>
       </div>
     </footer>
   );

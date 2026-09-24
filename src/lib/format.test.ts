@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatRent, formatRooms } from "./format";
+import {
+  formatAmount,
+  formatDate,
+  formatRent,
+  formatRooms,
+  formatWindow,
+} from "./format";
 
 describe("formatDate", () => {
   it("renders an ISO date as day, short month, year", () => {
@@ -28,5 +34,22 @@ describe("formatRooms", () => {
 
   it("pluralises rooms", () => {
     expect(formatRooms(3)).toBe("3 rooms");
+  });
+});
+
+describe("formatAmount", () => {
+  it("drops the per-month suffix so the card can style it", () => {
+    expect(formatAmount(850, "EUR")).toBe("\u20ac850");
+    expect(formatAmount(1400, "CHF")).toBe("CHF 1,400");
+  });
+});
+
+describe("formatWindow", () => {
+  it("shows both months when the handover has an end date", () => {
+    expect(formatWindow("2026-10-01", "2027-06-30")).toBe("Oct 2026 \u2013 Jun 2027");
+  });
+
+  it("says open-ended when there is no end date", () => {
+    expect(formatWindow("2026-11-15", null)).toBe("From Nov 2026, open-ended");
   });
 });

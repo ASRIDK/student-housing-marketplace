@@ -1,8 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
-import { formatDate, formatRent, formatRooms } from "@/lib/format";
+import { formatAmount, formatRooms, formatWindow } from "@/lib/format";
+import CityBadge from "@/components/CityBadge";
 
+/**
+ * One apartment in the browse grid. Photo first, then the three things a
+ * student actually decides on: where, when they can move in, and how much.
+ * The owner's first name is on the card because you are taking the place
+ * over from a person, not booking a hotel.
+ */
 export default function ListingCard({
   listing,
   isNew = false,
@@ -11,45 +18,62 @@ export default function ListingCard({
   isNew?: boolean;
 }) {
   const photo = listing.photos[0];
+  const firstName = listing.ownerName.split(" ")[0];
+  const isTaken = listing.status === "taken";
 
   return (
-    <Link
-      href={`/listings/${listing.id}`}
-      className="group block overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-    >
-      <div className="relative aspect-[4/3] w-full bg-zinc-100">
+    <Link href={`/listings/${listing.id}`} className="group block">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-mist">
         {photo ? (
           <Image
             src={photo}
-            alt={`${listing.neighbourhood}, ${listing.city}`}
+            alt={`${formatRooms(listing.rooms)} in ${listing.neighbourhood}, ${listing.city}`}
             fill
-            className="object-cover transition-transform duration-200 group-hover:scale-105"
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition duration-500 group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-zinc-400">
-            No photo
+          <div className="flex h-full items-center justify-center text-sm text-slate">
+            Photos coming soon
           </div>
         )}
-        <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-700 shadow-sm">
-          {listing.city}
-        </span>
-        {isNew && (
-          <span className="absolute right-2 top-2 rounded-full bg-emerald-600 px-2 py-1 text-xs font-medium text-white shadow-sm">
-            New
+
+        <div className="absolute left-3 top-3">
+          <CityBadge city={listing.city} />
+        </div>
+
+        {isNew && !isTaken && (
+          <span className="absolute right-3 top-3 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-navy shadow-sm">
+            Just posted
           </span>
+        )}
+
+        {isTaken && (
+          <div className="absolute inset-0 grid place-items-center bg-navy/55">
+            <span className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-navy">
+              Taken
+            </span>
+          </div>
         )}
       </div>
 
-      <div className="space-y-1 p-4">
-        <p className="text-sm text-zinc-500">{listing.neighbourhood}</p>
-        <p className="text-lg font-semibold text-zinc-900">
-          {formatRent(listing.rent, listing.currency)}
-        </p>
-        <div className="flex items-center justify-between text-sm text-zinc-600">
-          <span>{formatRooms(listing.rooms)}</span>
-          <span>Available from {formatDate(listing.availableFrom)}</span>
+      <div className="px-0.5 pt-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="title truncate text-[15px] font-semibold text-navy">
+            {listing.neighbourhood}
+          </h3>
+          <p className="shrink-0 text-[15px] font-semibold text-navy">
+            {formatAmount(listing.rent, listing.currency)}
+            <span className="font-normal text-slate"> /mo</span>
+          </p>
         </div>
+
+        <p className="mt-1 text-sm text-slate">
+          {formatWindow(listing.availableFrom, listing.availableUntil)}
+        </p>
+        <p className="mt-0.5 text-sm text-slate">
+          {formatRooms(listing.rooms)} · from {firstName}
+        </p>
       </div>
     </Link>
   );

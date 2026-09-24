@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
   agentRules: false,
   images: {
     remotePatterns: [
-      // Placeholder photos used by src/lib/mock-data.ts
-      { protocol: "https", hostname: "picsum.photos" },
+      // Stand-in apartment photography used by src/lib/mock-data.ts, until
+      // students upload their own through the form.
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
 };

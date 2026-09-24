@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+/** Copies the page URL so you can send a place to a friend. */
 export default function ShareButton() {
   const [copied, setCopied] = useState(false);
 
@@ -9,7 +10,7 @@ export default function ShareButton() {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
     }
@@ -17,10 +18,11 @@ export default function ShareButton() {
 
   return (
     <button
+      type="button"
       onClick={handleShare}
-      className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+      className="rounded-full px-3 py-1.5 text-sm font-medium text-navy underline underline-offset-4 transition hover:bg-mist"
     >
-      {copied ? "✓ Link copied!" : "Share"}
+      {copied ? "Link copied" : "Share"}
     </button>
   );
 }

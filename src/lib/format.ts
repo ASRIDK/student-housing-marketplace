@@ -26,3 +26,27 @@ export function formatRent(rent: number, currency: Currency): string {
 export function formatRooms(rooms: number): string {
   return rooms === 1 ? "Studio" : `${rooms} rooms`;
 }
+
+/** 850, "EUR" -> "€850" — the bare amount, for when the card styles the
+ * "/ month" part separately. */
+export function formatAmount(rent: number, currency: Currency): string {
+  const amount = rent.toLocaleString("en-GB");
+  return currency === "EUR" ? `€${amount}` : `CHF ${amount}`;
+}
+
+/**
+ * The handover window, short enough for a card.
+ * ("2026-10-01", "2027-06-30") -> "Oct 2026 – Jun 2027"
+ * ("2026-10-01", null)         -> "From Oct 2026, open-ended"
+ */
+export function formatWindow(from: string, until: string | null): string {
+  const month = (iso: string) => {
+    const [year, monthNumber] = iso.split("-").map(Number);
+    return new Date(Date.UTC(year, monthNumber - 1, 1)).toLocaleDateString("en-GB", {
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  };
+  return until ? `${month(from)} – ${month(until)}` : `From ${month(from)}, open-ended`;
+}

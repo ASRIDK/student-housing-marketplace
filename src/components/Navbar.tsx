@@ -1,43 +1,56 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const NAV_LINKS = [
   { href: "/", label: "Browse" },
-  { href: "/listings/new", label: "Post an apartment" },
+  { href: "/listings/new", label: "Post your place" },
+  { href: "/my-listings", label: "My listings" },
   { href: "/about", label: "How it works" },
 ];
+
+/** The SS mark — StudentSwap, in a sky-blue tile. */
+function Logo() {
+  return (
+    <span
+      aria-hidden
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-sky text-[13px] font-black tracking-tight text-navy"
+    >
+      SS
+    </span>
+  );
+}
 
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--primary)]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-50 bg-navy text-white">
+      <div className="mx-auto flex max-w-6xl items-center gap-6 px-5 py-3.5 sm:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-bold text-white"
           onClick={() => setOpen(false)}
+          className="title flex items-center gap-2.5 text-[17px] font-extrabold text-white"
         >
-          <Image src="/logo.svg" alt="" width={32} height={32} priority />
+          <Logo />
           StudentSwap
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="ml-auto hidden items-center gap-7 md:flex">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={active ? "page" : undefined}
                 className={
                   active
-                    ? "text-sm font-semibold text-[var(--accent)]"
-                    : "text-sm font-medium text-white/80 transition hover:text-white"
+                    ? "text-sm font-semibold text-white underline decoration-sky decoration-2 underline-offset-8"
+                    : "text-sm font-medium text-white/70 transition hover:text-white"
                 }
               >
                 {link.label}
@@ -46,17 +59,18 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          {/* TODO(auth): swap these for the user's name + "My listings" once logged in */}
+        <div className="hidden items-center gap-2 md:flex">
+          {/* TODO(auth): show the student's name and a log-out item instead
+              once there is a session. */}
           <Link
             href="/login"
-            className="text-sm font-medium text-white/80 transition hover:text-white"
+            className="rounded-full px-3.5 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
           >
             Log in
           </Link>
           <Link
             href="/signup"
-            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="rounded-full bg-sky px-4 py-2 text-sm font-semibold text-navy transition hover:bg-white"
           >
             Sign up
           </Link>
@@ -64,75 +78,53 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="flex items-center justify-center rounded-lg p-2 text-white md:hidden"
-          aria-label="Toggle menu"
-          aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
+          aria-expanded={open}
+          aria-label={open ? "Close menu" : "Open menu"}
+          className="ml-auto rounded-lg p-2 text-white md:hidden"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
             {open ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" d="M6 18 18 6M6 6l12 12" />
             ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
             )}
           </svg>
         </button>
       </div>
 
       {open && (
-        <div className="border-t border-[var(--border)] bg-[var(--primary)] px-4 pb-4 md:hidden">
-          <nav className="flex flex-col gap-3 pt-3">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
-              return (
+        <nav className="border-t border-white/10 px-5 pb-4 md:hidden">
+          <ul className="flex flex-col">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
                 <Link
-                  key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className={
-                    active
-                      ? "text-sm font-semibold text-[var(--accent)]"
-                      : "text-sm font-medium text-white/80"
-                  }
+                  className="block py-3 text-sm font-medium text-white/80"
                 >
                   {link.label}
                 </Link>
-              );
-            })}
-            <hr className="border-[var(--border)]" />
-            {/* TODO(auth): swap these for the user's name + "My listings" once logged in */}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 flex gap-2 border-t border-white/10 pt-4">
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="text-sm font-medium text-white/80"
+              className="flex-1 rounded-full border border-white/25 py-2.5 text-center text-sm font-medium text-white"
             >
               Log in
             </Link>
             <Link
               href="/signup"
               onClick={() => setOpen(false)}
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-center text-sm font-semibold text-white"
+              className="flex-1 rounded-full bg-sky py-2.5 text-center text-sm font-semibold text-navy"
             >
               Sign up
             </Link>
-          </nav>
-        </div>
+          </div>
+        </nav>
       )}
     </header>
   );
