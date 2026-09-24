@@ -34,9 +34,13 @@ Every student has a personal instruction file in `tasks/`.
 
 ```bash
 npm install
-cp .env.example .env.local   # ask Taoufik for the values (not needed yet — mock data only)
+cp .env.example .env.local   # ask Taoufik for the database connection strings
 npm run dev                  # http://localhost:3000
 ```
+
+Node 22 or newer is required. The app reads from a Neon Postgres database
+through the Neon serverless driver (port 443), so it works on networks that
+block the usual Postgres port.
 
 Before opening a pull request, make sure these all pass:
 
@@ -47,5 +51,29 @@ npm test            # unit tests (Vitest)
 npm run build       # production build
 ```
 
-Shared code lives in `src/lib/`: `types.ts` (the `Listing` shape), `mock-data.ts`
-(ten fake listings) and `format.ts` (`formatDate`, `formatRent`, `formatRooms`).
+Shared code lives in `src/lib/`: `types.ts` (the `Listing` shape), `format.ts`
+(`formatDate`, `formatRent`, `formatRooms`), `listings.ts` (every database
+query) and `mock-data.ts` (the ten listings used to seed the database).
+
+## Database and API
+
+| Command | What it does |
+|---|---|
+| `npm run db:migrate` | create/apply a migration after editing `prisma/schema.prisma` |
+| `npm run db:seed` | load the ten mock listings (safe to re-run) |
+| `npm run db:studio` | browse the database in the browser |
+
+Server components call `src/lib/listings.ts` directly. Client code (the
+listing form) uses the JSON API — every error is `{ "error": "..." }`:
+
+| Method | Route | Notes |
+|---|---|---|
+| GET | `/api/listings?city=&maxRent=&availableFrom=&sort=` | active listings; `sort` = newest, cheapest, expensive |
+| GET | `/api/listings/:id` | 404 if unknown |
+| POST | `/api/listings` | body = listing fields, 201 on success |
+| PUT | `/api/listings/:id` | any subset of the fields, owner only |
+| PATCH | `/api/listings/:id/status` | `{ "status": "active" \| "taken" }`, owner only |
+
+Until login exists, write requests in development identify the caller with an
+`x-user-id` header set to a seeded user id (`u-1` … `u-10`). The header is
+ignored in production.

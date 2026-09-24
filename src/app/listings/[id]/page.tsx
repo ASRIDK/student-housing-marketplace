@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getMockListing } from "@/lib/mock-data";
+import { getListing } from "@/lib/listings";
 import { formatDate, formatRent, formatRooms } from "@/lib/format";
 import PhotoGallery from "@/components/PhotoGallery";
 import ContactCard from "@/components/ContactCard";
@@ -11,7 +11,7 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const listing = getMockListing(id);
+  const listing = await getListing(id);
   if (!listing) {
     return { title: "Listing not found" };
   }
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ListingDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const listing = getMockListing(id);
+  const listing = await getListing(id);
   if (!listing) {
     notFound();
   }
@@ -34,7 +34,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     : `From ${formatDate(listing.availableFrom)} – open-ended`;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <div>
       {isTaken && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           This apartment has already been taken
@@ -73,6 +73,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
