@@ -14,8 +14,15 @@ type Errors = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Only Albert School students can post, so only school email addresses. */
+const SCHOOL_DOMAIN = "albertschool.com";
+
+const field =
+  "mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky";
 
 export default function AuthForm({ mode }: { mode: Mode }) {
+  const isSignup = mode === "signup";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,17 +33,19 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   function validate(): Errors {
     const next: Errors = {};
 
-    if (mode === "signup" && name.trim().length === 0) {
-      next.name = "Please enter your name.";
+    if (isSignup && name.trim().length === 0) {
+      next.name = "Enter the name your classmates know you by.";
     }
     if (!EMAIL_REGEX.test(email)) {
-      next.email = "Please enter a valid email address.";
+      next.email = "That does not look like an email address.";
+    } else if (isSignup && !email.trim().toLowerCase().endsWith(`@${SCHOOL_DOMAIN}`)) {
+      next.email = `Sign up with your @${SCHOOL_DOMAIN} address.`;
     }
     if (password.length < 8) {
-      next.password = "Password must be at least 8 characters.";
+      next.password = "Use at least 8 characters.";
     }
-    if (mode === "signup" && confirmPassword !== password) {
-      next.confirmPassword = "Passwords do not match.";
+    if (isSignup && confirmPassword !== password) {
+      next.confirmPassword = "The two passwords are different.";
     }
 
     return next;
@@ -52,125 +61,119 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       return;
     }
 
-    // TODO(auth): wire this up to the real login/signup API.
-    console.log({ mode, name, email, password });
+    // TODO(auth): call the real sign-in / sign-up endpoint (Auth.js).
     setSubmitted(true);
   }
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 py-8">
-      <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
-        <h1 className="text-xl font-bold">
-          {mode === "login" ? "Log in" : "Create your account"}
+    <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-5 py-12">
+      <div className="w-full">
+        <h1 className="display text-3xl font-extrabold text-navy">
+          {isSignup ? "Join StudentSwap" : "Welcome back"}
         </h1>
+        <p className="mt-2 text-sm text-slate">
+          {isSignup
+            ? `Open to anyone with an @${SCHOOL_DOMAIN} address.`
+            : "Log in to post a place or manage your listings."}
+        </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          {mode === "signup" && (
+        <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
+          {isSignup && (
             <div>
-              <label htmlFor="name" className="text-sm font-medium">
+              <label htmlFor="name" className="text-sm font-medium text-navy">
                 Name
               </label>
               <input
                 id="name"
                 type="text"
+                autoComplete="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                onChange={(event) => setName(event.target.value)}
+                aria-invalid={Boolean(errors.name)}
+                className={field}
               />
-              {errors.name && (
-                <p className="mt-1 text-xs text-[var(--secondary)]">
-                  {errors.name}
-                </p>
-              )}
+              {errors.name && <p className="mt-1.5 text-xs text-danger">{errors.name}</p>}
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="text-sm font-medium">
-              {mode === "signup" ? "School email" : "Email"}
+            <label htmlFor="email" className="text-sm font-medium text-navy">
+              School email
             </label>
             <input
               id="email"
               type="email"
+              autoComplete="email"
+              placeholder={`you@${SCHOOL_DOMAIN}`}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+              onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={Boolean(errors.email)}
+              className={`${field} placeholder:text-slate/60`}
             />
-            {errors.email && (
-              <p className="mt-1 text-xs text-[var(--secondary)]">
-                {errors.email}
-              </p>
-            )}
+            {errors.email && <p className="mt-1.5 text-xs text-danger">{errors.email}</p>}
           </div>
 
           <div>
-            <label htmlFor="password" className="text-sm font-medium">
+            <label htmlFor="password" className="text-sm font-medium text-navy">
               Password
             </label>
             <input
               id="password"
               type="password"
+              autoComplete={isSignup ? "new-password" : "current-password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+              onChange={(event) => setPassword(event.target.value)}
+              aria-invalid={Boolean(errors.password)}
+              className={field}
             />
             {errors.password && (
-              <p className="mt-1 text-xs text-[var(--secondary)]">
-                {errors.password}
-              </p>
+              <p className="mt-1.5 text-xs text-danger">{errors.password}</p>
             )}
           </div>
 
-          {mode === "signup" && (
+          {isSignup && (
             <div>
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-navy">
                 Confirm password
               </label>
               <input
                 id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                aria-invalid={Boolean(errors.confirmPassword)}
+                className={field}
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-[var(--secondary)]">
-                  {errors.confirmPassword}
-                </p>
+                <p className="mt-1.5 text-xs text-danger">{errors.confirmPassword}</p>
               )}
             </div>
           )}
 
-          {submitted && (
-            <p className="text-xs text-[var(--muted)]">
-              Not connected to the backend yet.
-            </p>
-          )}
-
           <button
             type="submit"
-            className="mt-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="w-full rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white transition hover:bg-navy-700"
           >
-            {mode === "login" ? "Log in" : "Sign up"}
+            {isSignup ? "Create my account" : "Log in"}
           </button>
+
+          {submitted && (
+            <p className="rounded-xl bg-mist px-4 py-3 text-sm text-slate">
+              Accounts are not switched on yet — Taoufik is building the login.
+              Everything else on the site works in the meantime.
+            </p>
+          )}
         </form>
 
-        <p className="mt-4 text-center text-sm text-[var(--muted)]">
-          {mode === "login" ? (
-            <>
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="font-medium text-[var(--accent)]">
-                Sign up
-              </Link>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <Link href="/login" className="font-medium text-[var(--accent)]">
-                Log in
-              </Link>
-            </>
-          )}
+        <p className="mt-6 text-center text-sm text-slate">
+          {isSignup ? "Already have an account? " : "New here? "}
+          <Link
+            href={isSignup ? "/login" : "/signup"}
+            className="font-medium text-deep underline underline-offset-4"
+          >
+            {isSignup ? "Log in" : "Create an account"}
+          </Link>
         </p>
       </div>
     </div>
