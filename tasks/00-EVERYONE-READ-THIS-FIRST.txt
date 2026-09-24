@@ -35,10 +35,12 @@ STEP 0 — GET THE CODE  (do this once)
    git checkout <your-branch>  # your branch name is in your task file
    git merge main              # pull in the latest skeleton from Taoufik
    npm install
+   cp .env.example .env.local  # then paste the two DATABASE_URL lines
+                               # Taoufik sends you (never commit them)
    npm run dev                 # open http://localhost:3000
 
-You should see "StudentSwap — Skeleton is running" with a list of 9
-mock apartments. If not, ask Taoufik before going further.
+You should see the site with 9 apartments coming from the shared
+database. If not, ask Taoufik before going further. Node 22+ needed.
 
 Before every pull request, run these four and fix anything red:
    npm run lint
@@ -131,10 +133,18 @@ THE SHARED DATA SHAPE  (src/lib/types.ts — everyone codes against this)
      email: string;
    };
 
-Until the real backend exists, import fake data from
-src/lib/mock-data.ts (it will contain ~10 listings across the 5
-cities). When Taoufik's API is ready, he will swap the import for a
-real fetch — your UI does not change.
+The data now comes from a real database (Neon Postgres). Two ways to
+get it:
+
+   Server components (pages):  import { getListings, getListing }
+                               from "@/lib/listings"  and await them.
+   Client components (forms):  fetch("/api/listings", ...) — routes,
+                               filters and error format are in README.md.
+
+While there is no login yet, add the header  x-user-id: u-1  to POST /
+PUT / PATCH requests in development to act as a seeded user.
+src/lib/mock-data.ts still exists: it is the seed data and is handy in
+tests, but pages should not import it any more.
 
 
 NEXT.JS THINGS THAT WILL BITE YOU (read now, thank me later)
