@@ -3,7 +3,11 @@
 
 import type { Listing } from "./types";
 
-const photo = (seed: string) => `https://picsum.photos/seed/${seed}/800/600`;
+// Real apartment interiors from Unsplash, standing in until students upload
+// their own. Every id was checked to load and to actually show a flat — no
+// city skylines, no show homes.
+const photo = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1200&q=70`;
 
 export const mockListings: Listing[] = [
   {
@@ -20,7 +24,11 @@ export const mockListings: Listing[] = [
     rooms: 2,
     description:
       "Bright 2-room flat two minutes from the canals. Furnished, washing machine, fast wifi. The landlord is happy to keep the same rent for the next student.",
-    photos: [photo("milan1a"), photo("milan1b"), photo("milan1c")],
+    photos: [
+      photo("1522708323590-d24dbb6b0267"),
+      photo("1493663284031-b7e3aefcae8e"),
+      photo("1522771739844-6a9f6d5f14af"),
+    ],
     status: "active",
     createdAt: "2026-09-10T09:00:00Z",
   },
@@ -38,7 +46,7 @@ export const mockListings: Listing[] = [
     rooms: 1,
     description:
       "Studio next to the Politecnico. Small but has everything: kitchenette, desk, balcony. Open-ended contract, you can stay as long as you want.",
-    photos: [photo("milan2a")],
+    photos: [photo("1586023492125-27b2c045efd7")],
     status: "active",
     createdAt: "2026-09-12T14:30:00Z",
   },
@@ -56,7 +64,10 @@ export const mockListings: Listing[] = [
     rooms: 2,
     description:
       "Room in a shared flat with one other student, in the middle of Malasaña. Big living room, rooftop access. Bills included in the rent.",
-    photos: [photo("madrid1a"), photo("madrid1b")],
+    photos: [
+      photo("1502672260266-1c1ef2d93688"),
+      photo("1615874959474-d609969a20ed"),
+    ],
     status: "active",
     createdAt: "2026-09-01T10:00:00Z",
   },
@@ -92,7 +103,12 @@ export const mockListings: Listing[] = [
     rooms: 2,
     description:
       "2-room apartment near the university and the Plainpalais market. Quiet building, parking spot available for an extra fee.",
-    photos: [photo("geneva1a"), photo("geneva1b"), photo("geneva1c"), photo("geneva1d")],
+    photos: [
+      photo("1567767292278-a4f21aa2d36e"),
+      photo("1598928636135-d146006ff4be"),
+      photo("1484154218962-a197022b5858"),
+      photo("1513694203232-719a280e022f"),
+    ],
     status: "active",
     createdAt: "2026-09-08T08:15:00Z",
   },
@@ -110,7 +126,7 @@ export const mockListings: Listing[] = [
     rooms: 1,
     description:
       "Studio in Carouge, tram 12 gets you to campus in 15 minutes. Already taken by another student — kept here as an example of a closed listing.",
-    photos: [photo("geneva2a")],
+    photos: [photo("1540518614846-7eded433c457")],
     status: "taken",
     createdAt: "2026-08-25T12:00:00Z",
   },
@@ -128,7 +144,10 @@ export const mockListings: Listing[] = [
     rooms: 2,
     description:
       "Two rooms on the 5th floor in Belleville with a view over the whole city. Elevator, furnished, 8 minutes to metro line 2.",
-    photos: [photo("paris1a"), photo("paris1b")],
+    photos: [
+      photo("1493809842364-78817add7ffb"),
+      photo("1556911220-bff31c812dba"),
+    ],
     status: "active",
     createdAt: "2026-09-15T07:30:00Z",
   },
@@ -146,7 +165,11 @@ export const mockListings: Listing[] = [
     rooms: 3,
     description:
       "Three rooms shared between students near the Sorbonne. One room is freeing up. Rent shown is for the single room, kitchen and living room shared.",
-    photos: [photo("paris2a"), photo("paris2b"), photo("paris2c")],
+    photos: [
+      photo("1554995207-c18c203602cb"),
+      photo("1600121848594-d8644e57abab"),
+      photo("1524758631624-e2822e304c36"),
+    ],
     status: "active",
     createdAt: "2026-09-05T16:20:00Z",
   },
@@ -164,7 +187,10 @@ export const mockListings: Listing[] = [
     rooms: 2,
     description:
       "Old-town flat in Le Panier with a tiny terrace and a view of the port. Open-ended, the landlord prefers students from the school.",
-    photos: [photo("marseille1a"), photo("marseille1b")],
+    photos: [
+      photo("1560448204-e02f11c3d0e2"),
+      photo("1505691938895-1758d7feb511"),
+    ],
     status: "active",
     createdAt: "2026-09-13T11:10:00Z",
   },
@@ -182,7 +208,7 @@ export const mockListings: Listing[] = [
     rooms: 1,
     description:
       "Studio in the artsy Cours Julien area, surrounded by cafés and street art. 20 minutes by metro to the campus.",
-    photos: [photo("marseille2a")],
+    photos: [photo("1502005229762-cf1b2da7c5d6")],
     status: "active",
     createdAt: "2026-09-16T09:40:00Z",
   },
