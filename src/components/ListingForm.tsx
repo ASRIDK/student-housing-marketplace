@@ -3,15 +3,15 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { City, Currency, Listing } from "@/lib/types";
+import { CITIES, type City, type Currency, type Listing } from "@/lib/types";
 import {
   validateListingForm,
   isListingFormValid,
   type ListingFormValues,
   type ListingFormErrors,
 } from "@/lib/validation";
+import { devUserHeader } from "@/lib/dev-user";
 
-const CITIES: City[] = ["Milan", "Madrid", "Geneva", "Paris", "Marseille"];
 const CURRENCIES: Currency[] = ["EUR", "CHF"];
 const MAX_PHOTOS = 5;
 const MAX_DESCRIPTION = 2000;
@@ -110,12 +110,18 @@ export default function ListingForm({ initial }: ListingFormProps) {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>();
 
   const [existingPhotoUrls] = useState<string[]>(initial?.photos ?? []);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [photoError, setPhotoError] = useState<string | undefined>();
   const photosRef = useRef<PhotoPreview[]>([]);
-  photosRef.current = photos;
+
+  // Keep the ref in sync in an effect (never during render) so the cleanup
+  // below can revoke the preview URLs of whatever is on screen at unmount.
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
   useEffect(() => {
     return () => {
@@ -217,37 +223,45 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
     // TODO(upload): send `photos` (File[]) to Taoufik's upload function
     // once it exists, then include the resulting URLs in `data.photos`.
+    const body = { ...data, photos: existingPhotoUrls };
 
-    // TODO(api): swap the console.log below for the real call once
-    // Taoufik's API route is ready.
-    //
-    // const response = isEdit
-    //   ? await fetch(`/api/listings/${initial!.id}`, {
-    //       method: "PUT",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(data),
-    //     })
-    //   : await fetch("/api/listings", {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(data),
-    //     });
+    const response = isEdit
+      ? await fetch(`/api/listings/${initial!.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...devUserHeader() },
+          body: JSON.stringify(body),
+        })
+      : await fetch("/api/listings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...devUserHeader() },
+          body: JSON.stringify(body),
+        });
 
-    console.log(data);
-
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({}));
+      setIsSubmitting(false);
+      setSubmitError(problem.error ?? "Something went wrong. Please try again.");
+      return;
+    }
 
     setIsSubmitting(false);
     setSavedMessage(true);
     clearDraft(storageKey);
     router.push("/my-listings");
+    router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-xl space-y-6 p-4">
       {savedMessage && (
         <p className="rounded-md bg-green-100 p-3 text-sm text-green-800">
-          Saved! (fake)
+          Saved!
+        </p>
+      )}
+
+      {submitError && (
+        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+          {submitError}
         </p>
       )}
 
