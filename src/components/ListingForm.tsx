@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { City, Currency, Listing } from "@/lib/types";
@@ -10,6 +10,7 @@ import {
   type ListingFormValues,
   type ListingFormErrors,
 } from "@/lib/validation";
+import { draftKey, loadDraft, saveDraft, clearDraft } from "@/lib/listing-draft";
 
 const CITIES: City[] = ["Milan", "Madrid", "Geneva", "Paris", "Marseille"];
 const CURRENCIES: Currency[] = ["EUR", "CHF"];
@@ -55,41 +56,23 @@ function valuesFromListing(listing: Listing): ListingFormValues {
   };
 }
 
-// Bonus: keep an in-progress draft in localStorage so a refresh doesn't
-// lose the form. Photos aren't included (Files aren't JSON-serialisable
-// and nothing is uploaded yet anyway).
-const DRAFT_PREFIX = "studentswap:listing-draft:";
+type FieldProps = {
+  label: string;
+  htmlFor: string;
+  error?: string;
+  children: ReactNode;
+};
 
-function draftKey(initial?: Listing): string {
-  return initial ? `${DRAFT_PREFIX}edit:${initial.id}` : `${DRAFT_PREFIX}new`;
-}
-
-function loadDraft(key: string): ListingFormValues | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as ListingFormValues) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveDraft(key: string, values: ListingFormValues) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(values));
-  } catch {
-    // localStorage unavailable (private browsing, quota…) — ignore
-  }
-}
-
-function clearDraft(key: string) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // ignore
-  }
+function Field({ label, htmlFor, error, children }: FieldProps) {
+  return (
+    <div>
+      <label htmlFor={htmlFor} className="block text-sm font-medium">
+        {label}
+      </label>
+      {children}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
 }
 
 export default function ListingForm({ initial }: ListingFormProps) {
@@ -252,10 +235,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
       )}
 
       {/* City */}
-      <div>
-        <label htmlFor="city" className="block text-sm font-medium">
-          City
-        </label>
+      <Field label="City" htmlFor="city" error={showError("city")}>
         <select
           id="city"
           value={values.city}
@@ -270,16 +250,14 @@ export default function ListingForm({ initial }: ListingFormProps) {
             </option>
           ))}
         </select>
-        {showError("city") && (
-          <p className="mt-1 text-sm text-red-600">{showError("city")}</p>
-        )}
-      </div>
+      </Field>
 
       {/* Neighbourhood */}
-      <div>
-        <label htmlFor="neighbourhood" className="block text-sm font-medium">
-          Neighbourhood
-        </label>
+      <Field
+        label="Neighbourhood"
+        htmlFor="neighbourhood"
+        error={showError("neighbourhood")}
+      >
         <input
           id="neighbourhood"
           type="text"
@@ -289,18 +267,10 @@ export default function ListingForm({ initial }: ListingFormProps) {
           placeholder="e.g. Navigli"
           className="mt-1 w-full rounded-md border border-gray-300 p-2"
         />
-        {showError("neighbourhood") && (
-          <p className="mt-1 text-sm text-red-600">
-            {showError("neighbourhood")}
-          </p>
-        )}
-      </div>
+      </Field>
 
       {/* Rent + currency */}
-      <div>
-        <label htmlFor="rent" className="block text-sm font-medium">
-          Monthly rent
-        </label>
+      <Field label="Monthly rent" htmlFor="rent" error={showError("rent")}>
         <div className="mt-1 flex gap-2">
           <input
             id="rent"
@@ -324,16 +294,10 @@ export default function ListingForm({ initial }: ListingFormProps) {
             ))}
           </select>
         </div>
-        {showError("rent") && (
-          <p className="mt-1 text-sm text-red-600">{showError("rent")}</p>
-        )}
-      </div>
+      </Field>
 
       {/* Rooms */}
-      <div>
-        <label htmlFor="rooms" className="block text-sm font-medium">
-          Rooms
-        </label>
+      <Field label="Rooms" htmlFor="rooms" error={showError("rooms")}>
         <input
           id="rooms"
           type="number"
@@ -345,16 +309,14 @@ export default function ListingForm({ initial }: ListingFormProps) {
           placeholder="1 = studio"
           className="mt-1 w-full rounded-md border border-gray-300 p-2"
         />
-        {showError("rooms") && (
-          <p className="mt-1 text-sm text-red-600">{showError("rooms")}</p>
-        )}
-      </div>
+      </Field>
 
       {/* Available from */}
-      <div>
-        <label htmlFor="availableFrom" className="block text-sm font-medium">
-          Available from
-        </label>
+      <Field
+        label="Available from"
+        htmlFor="availableFrom"
+        error={showError("availableFrom")}
+      >
         <input
           id="availableFrom"
           type="date"
@@ -363,18 +325,14 @@ export default function ListingForm({ initial }: ListingFormProps) {
           onBlur={() => handleBlur("availableFrom")}
           className="mt-1 w-full rounded-md border border-gray-300 p-2"
         />
-        {showError("availableFrom") && (
-          <p className="mt-1 text-sm text-red-600">
-            {showError("availableFrom")}
-          </p>
-        )}
-      </div>
+      </Field>
 
       {/* Available until */}
-      <div>
-        <label htmlFor="availableUntil" className="block text-sm font-medium">
-          Available until
-        </label>
+      <Field
+        label="Available until"
+        htmlFor="availableUntil"
+        error={showError("availableUntil")}
+      >
         <input
           id="availableUntil"
           type="date"
@@ -392,12 +350,7 @@ export default function ListingForm({ initial }: ListingFormProps) {
           />
           Open-ended
         </label>
-        {showError("availableUntil") && (
-          <p className="mt-1 text-sm text-red-600">
-            {showError("availableUntil")}
-          </p>
-        )}
-      </div>
+      </Field>
 
       {/* Description */}
       <div>
