@@ -4,6 +4,7 @@ import FilterBar from "@/components/FilterBar";
 import ListingCard from "@/components/ListingCard";
 import EmptyState from "@/components/EmptyState";
 import CityTabs from "@/components/CityTabs";
+import FeaturedWheel from "@/components/FeaturedWheel";
 import { getListings } from "@/lib/listings";
 import { CITIES, type City } from "@/lib/types";
 
@@ -59,15 +60,26 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   return (
     <>
       <section className="bg-navy">
-        <div className="mx-auto max-w-6xl px-5 pb-24 pt-14 sm:px-8 sm:pb-28 sm:pt-20">
-          <h1 className="display max-w-3xl text-4xl font-extrabold text-white sm:text-6xl">
+        <div className="mx-auto max-w-6xl px-5 pb-24 pt-14 sm:px-8 sm:pb-0 sm:pt-20">
+          <h1 className="display max-w-2xl text-4xl font-extrabold text-white sm:text-5xl">
             Someone is leaving your campus. Take their keys.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/70">
+          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/70">
             Apartments handed over student to student in Milan, Madrid, Geneva,
             Paris and Marseille. You get the place, the landlord keeps a tenant,
             nobody pays an agency.
           </p>
+        </div>
+
+        {/* Four places to turn through: scroll over it, drag it, or use the
+            arrow keys; each card opens the listing.
+
+            Phones get the plain hero instead. The wheel sizes its type off the
+            card, the card is capped by the stage width, and at 390px that
+            leaves the labels at about 4px — the grid below already shows these
+            same places at a readable size. */}
+        <div className="on-navy mt-6 hidden w-full pb-24 sm:block sm:h-[32rem]">
+          <FeaturedWheel />
         </div>
       </section>
 
