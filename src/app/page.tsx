@@ -4,12 +4,15 @@ import FilterBar from "@/components/FilterBar";
 import ListingCard from "@/components/ListingCard";
 import EmptyState from "@/components/EmptyState";
 import CityTabs from "@/components/CityTabs";
-import { mockListings } from "@/lib/mock-data";
-import type { City } from "@/lib/types";
+import { getListings } from "@/lib/listings";
+import { CITIES, type City } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: { absolute: "StudentSwap — find your next apartment" },
 };
+
+// Reads the database on every request — never prerendered at build time.
+export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{
   city?: string;
@@ -24,51 +27,49 @@ function isRecent(createdAt: string): boolean {
   return Date.now() - new Date(createdAt).getTime() < NEW_WINDOW_MS;
 }
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+/** Ignore anything that is not one of our five cities or three sort modes. */
+function asCity(value: string | undefined): City | undefined {
+  return CITIES.includes(value as City) ? (value as City) : undefined;
+}
+
+function asSort(value: string | undefined) {
+  return value === "cheapest" || value === "expensive" ? value : "newest";
+}
+
+export default async function Home({ searchParams }: { searchParams: SearchParams }) {
   const { city, maxRent, availableFrom, sort } = await searchParams;
 
-  const withoutCity = mockListings
-    .filter((listing) => listing.status === "active")
-    .filter((listing) => !maxRent || listing.rent <= Number(maxRent))
-    .filter(
-      (listing) => !availableFrom || listing.availableFrom <= availableFrom,
-    );
+  // Without the city filter, so the city tabs can show a count each.
+  const withoutCity = await getListings({
+    maxRent: maxRent ? Number(maxRent) : undefined,
+    availableFrom: availableFrom || undefined,
+    sort: asSort(sort),
+  });
 
   const cityCounts: Partial<Record<City, number>> = {};
   for (const listing of withoutCity) {
     cityCounts[listing.city] = (cityCounts[listing.city] ?? 0) + 1;
   }
 
-  const filtered = withoutCity
-    .filter((listing) => !city || listing.city === (city as City))
-    .sort((a, b) => {
-      if (sort === "cheapest") return a.rent - b.rent;
-      if (sort === "expensive") return b.rent - a.rent;
-      return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    });
+  const selectedCity = asCity(city);
+  const filtered = selectedCity
+    ? withoutCity.filter((listing) => listing.city === selectedCity)
+    : withoutCity;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div>
       <h1 className="mb-6 text-2xl font-semibold text-zinc-900">
         Find your next apartment
       </h1>
 
-      <Suspense
-        fallback={<div className="mb-6 h-[76px] rounded-xl bg-zinc-100" />}
-      >
+      <Suspense fallback={<div className="mb-6 h-[76px] rounded-xl bg-zinc-100" />}>
         <FilterBar key={`${city}|${maxRent}|${availableFrom}|${sort}`} />
       </Suspense>
 
       <CityTabs
         counts={cityCounts}
         total={withoutCity.length}
-        current={city}
+        current={selectedCity}
         params={{ maxRent, availableFrom, sort }}
       />
 

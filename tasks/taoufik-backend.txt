@@ -23,8 +23,14 @@ WEEK 0 — SKELETON (done: PR #1)
      students can put the preview link in their PR instead of
      screenshots.
 
-WEEK 1 — DATABASE + API
-   - Neon Postgres via Vercel Marketplace, Prisma schema = types.ts
+WEEK 1 — DATABASE + API (done: feat/database)
+   - Neon Postgres (project aged-grass-45469358, branch production),
+     Prisma 7 + @prisma/adapter-neon over WebSocket (port 443). School
+     wifi blocks 5432, so `prisma migrate dev` cannot run from there;
+     `vercel-build` runs `prisma migrate deploy` on every deploy.
+   - prisma/schema.prisma mirrors src/lib/types.ts; prisma/seed.ts loads
+     the mock listings; src/lib/listings.ts is the only file that
+     touches the database.
    - Route handlers:
        GET    /api/listings            (filters: city, maxRent, from)
        POST   /api/listings            (auth required)

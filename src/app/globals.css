@@ -9,7 +9,8 @@
   - Inspired by Albert School's student platform: dark navy base,
     sky-blue accent, coral secondary.
   - Two themes: light (default) and dark (toggle adds .dark on <html>).
-  - Font: Manrope (sans-serif), loaded via next/font in layout.tsx.
+  - Font: Manrope (sans-serif), self-hosted from src/app/fonts via
+    next/font/local in layout.tsx (no Google Fonts request at build).
   - One colour per city for CityBadge: Milan, Madrid, Geneva, Paris,
     Marseille — reused by everyone via CityBadge, don't invent new ones.
 */
