@@ -8,7 +8,7 @@ import { getListings } from "@/lib/listings";
 import { CITIES, type City } from "@/lib/types";
 
 export const metadata: Metadata = {
-  title: { absolute: "StudentSwap — find your next apartment" },
+  title: { absolute: "StudentSwap — take over a classmate's apartment" },
 };
 
 // Reads the database on every request — never prerendered at build time.
@@ -39,7 +39,7 @@ function asSort(value: string | undefined) {
 export default async function Home({ searchParams }: { searchParams: SearchParams }) {
   const { city, maxRent, availableFrom, sort } = await searchParams;
 
-  // Without the city filter, so the city tabs can show a count each.
+  // Fetched without the city filter so each campus tab can show a count.
   const withoutCity = await getListings({
     maxRent: maxRent ? Number(maxRent) : undefined,
     availableFrom: availableFrom || undefined,
@@ -52,44 +52,64 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   }
 
   const selectedCity = asCity(city);
-  const filtered = selectedCity
+  const listings = selectedCity
     ? withoutCity.filter((listing) => listing.city === selectedCity)
     : withoutCity;
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-zinc-900">
-        Find your next apartment
-      </h1>
-
-      <Suspense fallback={<div className="mb-6 h-[76px] rounded-xl bg-zinc-100" />}>
-        <FilterBar key={`${city}|${maxRent}|${availableFrom}|${sort}`} />
-      </Suspense>
-
-      <CityTabs
-        counts={cityCounts}
-        total={withoutCity.length}
-        current={selectedCity}
-        params={{ maxRent, availableFrom, sort }}
-      />
-
-      <p className="mb-4 text-sm text-zinc-600">
-        {filtered.length} apartment{filtered.length === 1 ? "" : "s"}
-      </p>
-
-      {filtered.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              isNew={isRecent(listing.createdAt)}
-            />
-          ))}
+    <>
+      <section className="bg-navy">
+        <div className="mx-auto max-w-6xl px-5 pb-24 pt-14 sm:px-8 sm:pb-28 sm:pt-20">
+          <h1 className="display max-w-3xl text-4xl font-extrabold text-white sm:text-6xl">
+            Someone is leaving your campus. Take their keys.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/70">
+            Apartments handed over student to student in Milan, Madrid, Geneva,
+            Paris and Marseille. You get the place, the landlord keeps a tenant,
+            nobody pays an agency.
+          </p>
         </div>
-      )}
-    </div>
+      </section>
+
+      {/* The search panel straddles the hero edge, the way a booking site's
+          search bar does. */}
+      <div className="mx-auto -mt-12 max-w-4xl px-5 sm:-mt-9 sm:px-8">
+        <Suspense fallback={<div className="h-[76px] rounded-full bg-white shadow-lg" />}>
+          <FilterBar />
+        </Suspense>
+      </div>
+
+      <section className="mx-auto max-w-6xl px-5 pt-10 sm:px-8">
+        <CityTabs
+          counts={cityCounts}
+          total={withoutCity.length}
+          current={selectedCity}
+          params={{ maxRent, availableFrom, sort }}
+        />
+
+        <div className="mt-8 flex items-baseline justify-between gap-4">
+          <h2 className="title text-lg font-bold text-navy">
+            {selectedCity ? `Apartments in ${selectedCity}` : "All apartments"}
+          </h2>
+          <p className="text-sm text-slate">
+            {listings.length} {listings.length === 1 ? "place" : "places"}
+          </p>
+        </div>
+
+        {listings.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                isNew={isRecent(listing.createdAt)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
   );
 }
