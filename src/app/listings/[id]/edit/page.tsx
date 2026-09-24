@@ -23,8 +23,8 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
   }
 
   return (
-    <div className="mx-auto max-w-xl">
-      <h1 className="text-2xl font-semibold">Edit listing</h1>
+    <div className="mx-auto max-w-xl px-5 py-10 sm:px-8">
+      <h1 className="display text-3xl font-extrabold text-navy">Edit listing</h1>
       <ListingForm initial={listing} />
     </div>
   );
