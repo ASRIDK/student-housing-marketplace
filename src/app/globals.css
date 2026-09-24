@@ -1,66 +1,110 @@
 @import "tailwindcss";
 
 /*
-  Design tokens. Andrea owns this file — define the primary/accent
-  colours and the site font here (see tasks/Andrea-CALLIES.txt) and
-  document the choices in this comment so everyone follows them.
+  StudentSwap design tokens.
 
-  DESIGN CHOICES
-  - Inspired by Albert School's student platform: dark navy base,
-    sky-blue accent, coral secondary.
-  - Two themes: light (default) and dark (toggle adds .dark on <html>).
-  - Font: Manrope (sans-serif), self-hosted from src/app/fonts via
-    next/font/local in layout.tsx (no Google Fonts request at build).
-  - One colour per city for CityBadge: Milan, Madrid, Geneva, Paris,
-    Marseille — reused by everyone via CityBadge, don't invent new ones.
+  COLOURS — taken from albertschool.com so the site reads as an Albert
+  School product. Their swatches: brand-dark #202448, brand-light
+  #2eaee0, brand-medium #035ca0, brand-dark-opacify #eaeff6.
+
+  How to use them:
+    navy   structure — navbar, footer, primary buttons, headings
+    sky    action — only on things you can click, focus rings, active tab
+    deep   the pressed/hover state of sky, and text links
+    mist   quiet page grounds, chips, image placeholders
+    ink    body text          slate  secondary text        line  borders
+
+  Never colour plain text sky: reserve it so "blue = you can act on it"
+  stays true across the whole site.
+
+  TYPE — Inter (the face Albert School uses), self-hosted from
+  src/app/fonts via next/font/local in layout.tsx, so the build never
+  calls Google Fonts. One family only: hierarchy comes from weight,
+  size and tracking (.display and .title below).
+
+  CITY COLOURS — one hue per campus, used by CityBadge. Don't invent new
+  ones; add here if we ever open a sixth campus.
 */
+
 :root {
-  --background: #fafafa;
-  --foreground: #111827;
+  --navy: #202448;
+  --navy-700: #2c3160;
+  --sky: #2eaee0;
+  --deep: #035ca0;
+  --mist: #eaeff6;
+
+  --ink: #12142b;
+  --slate: #5b6480;
+  --line: #dfe4ee;
   --surface: #ffffff;
-  --primary: #12172a;
-  --accent: #2b8fcc;
-  --secondary: #e85a6a;
-  --muted: #6b7280;
-  --border: #e5e7eb;
+  --background: #ffffff;
 
-  --city-milan: #f0a64d;
-  --city-madrid: #e85a6a;
-  --city-geneva: #2b8fcc;
-  --city-paris: #b98ce8;
-  --city-marseille: #3fbf9a;
-}
+  --positive: #0f7b55;
+  --warning: #e7a92d;
+  --danger: #b3261e;
 
-.dark {
-  --background: #0b0f1c;
-  --foreground: #f5f5f5;
-  --surface: #161c30;
-  --primary: #12172a;
-  --accent: #5ec8f0;
-  --secondary: #f16b7a;
-  --muted: #9ca3af;
-  --border: #252c42;
+  --city-milan: #e7a92d;
+  --city-madrid: #d8443c;
+  --city-geneva: #2eaee0;
+  --city-paris: #6f5bd0;
+  --city-marseille: #0f9b8e;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-navy: var(--navy);
+  --color-navy-700: var(--navy-700);
+  --color-sky: var(--sky);
+  --color-deep: var(--deep);
+  --color-mist: var(--mist);
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-line: var(--line);
   --color-surface: var(--surface);
-  --color-primary: var(--primary);
-  --color-accent: var(--accent);
-  --color-secondary: var(--secondary);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
+  --color-background: var(--background);
+  --color-positive: var(--positive);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 
   --color-city-milan: var(--city-milan);
   --color-city-madrid: var(--city-madrid);
   --color-city-geneva: var(--city-geneva);
   --color-city-paris: var(--city-paris);
   --color-city-marseille: var(--city-marseille);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  /* Inter's figures are proportional by default; rents line up tabular. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display sizes are set tight; body text keeps normal tracking. */
+.display {
+  letter-spacing: -0.033em;
+  line-height: 1.03;
+}
+
+.title {
+  letter-spacing: -0.02em;
+}
+
+/* One focus style everywhere, in the action colour. */
+:focus-visible {
+  outline: 2px solid var(--sky);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
