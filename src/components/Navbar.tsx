@@ -11,14 +11,14 @@ const NAV_LINKS = [
   { href: "/about", label: "How it works" },
 ];
 
-/** The A mark: Albert School navy square with a sky-blue cut corner. */
+/** The SS mark — StudentSwap, in a sky-blue tile. */
 function Logo() {
   return (
     <span
       aria-hidden
-      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-sky text-[15px] font-black text-navy"
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-sky text-[13px] font-black tracking-tight text-navy"
     >
-      A
+      SS
     </span>
   );
 }

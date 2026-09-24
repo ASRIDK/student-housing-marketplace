@@ -4,6 +4,7 @@ import FilterBar from "@/components/FilterBar";
 import ListingCard from "@/components/ListingCard";
 import EmptyState from "@/components/EmptyState";
 import CityTabs from "@/components/CityTabs";
+import FeaturedWheel from "@/components/FeaturedWheel";
 import { getListings } from "@/lib/listings";
 import { CITIES, type City } from "@/lib/types";
 
@@ -56,18 +57,46 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     ? withoutCity.filter((listing) => listing.city === selectedCity)
     : withoutCity;
 
+  // The hero wheel always shows the four newest places, whatever is filtered
+  // below, and always with a photo — a blank card would turn to nothing.
+  const featured = (await getListings({ sort: "newest" }))
+    .filter((listing) => listing.photos.length > 0)
+    .slice(0, 4)
+    .map((listing) => ({
+      title: `${listing.neighbourhood}, ${listing.city}`,
+      image: listing.photos[0],
+      href: `/listings/${listing.id}`,
+    }));
+
   return (
     <>
+      {/* The hero fills the screen: the pitch on one side, the wheel on the
+          other, both centred on the same line. */}
       <section className="bg-navy">
-        <div className="mx-auto max-w-6xl px-5 pb-24 pt-14 sm:px-8 sm:pb-28 sm:pt-20">
-          <h1 className="display max-w-3xl text-4xl font-extrabold text-white sm:text-6xl">
-            Someone is leaving your campus. Take their keys.
-          </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/70">
-            Apartments handed over student to student in Milan, Madrid, Geneva,
-            Paris and Marseille. You get the place, the landlord keeps a tenant,
-            nobody pays an agency.
-          </p>
+        <div className="mx-auto grid min-h-[100svh] max-w-6xl content-center items-center gap-10 px-5 pb-28 pt-8 sm:px-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-14">
+          <div>
+            <h1 className="display text-4xl font-extrabold text-white sm:text-5xl">
+              Someone is leaving your campus. Take their keys.
+            </h1>
+            <p className="mt-5 text-base leading-relaxed text-white/70">
+              Apartments handed over student to student in Milan, Madrid,
+              Geneva, Paris and Marseille. You get the place, the landlord keeps
+              a tenant, nobody pays an agency.
+            </p>
+          </div>
+
+          {/* Scroll over it, drag it, or use the arrow keys; each card opens
+              that listing. The ring is about 3.3 card-heights tall and the card
+              is sized off the stage, so the stage needs to be taller than it is
+              wide or the top and bottom of the ring get clipped.
+
+              Phones get the plain hero instead: the wheel sizes its type off
+              the card, the card is capped by the stage width, and at 390px that
+              leaves the labels at about 4px — the grid below already shows
+              these same places at a readable size. */}
+          <div className="on-navy hidden h-[34rem] w-full sm:block xl:h-[38rem]">
+            <FeaturedWheel items={featured} />
+          </div>
         </div>
       </section>
 

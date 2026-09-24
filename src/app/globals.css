@@ -48,6 +48,16 @@
   --city-geneva: #2eaee0;
   --city-paris: #6f5bd0;
   --city-marseille: #0f9b8e;
+
+  /*
+    Aliases for shadcn-style components dropped into src/components/ui.
+    They expect background/foreground/muted/muted-foreground, so we point
+    those at our own palette instead of running a second colour system.
+    Don't use these in our own code — use the names above.
+  */
+  --foreground: var(--ink);
+  --muted: var(--mist);
+  --muted-foreground: var(--slate);
 }
 
 @theme inline {
@@ -71,6 +81,11 @@
   --color-city-paris: var(--city-paris);
   --color-city-marseille: var(--city-marseille);
 
+  /* Aliases for shadcn-style components — see the note above. */
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -91,6 +106,17 @@ body {
 
 .title {
   letter-spacing: -0.02em;
+}
+
+/*
+  Components from src/components/ui read the shadcn aliases above, which are
+  tuned for a white page. Wrap one in .on-navy to re-point those aliases to
+  light values for that subtree only — used by the wheel in the hero.
+*/
+.on-navy {
+  --foreground: #ffffff;
+  --muted-foreground: rgba(255, 255, 255, 0.55);
+  --muted: rgba(255, 255, 255, 0.1);
 }
 
 /* One focus style everywhere, in the action colour. */
