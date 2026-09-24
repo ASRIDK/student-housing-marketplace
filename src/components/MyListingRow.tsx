@@ -2,20 +2,42 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { Listing } from "@/lib/types";
 import { formatRent } from "@/lib/format";
+import { devUserHeader } from "@/lib/dev-user";
 
 type MyListingRowProps = {
   listing: Listing;
 };
 
 export default function MyListingRow({ listing }: MyListingRowProps) {
+  const router = useRouter();
   const thumb = listing.photos[0];
   const isTaken = listing.status === "taken";
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
-  function handleMarkAsTaken() {
-    // TODO(api): call the real endpoint to update this listing's status.
-    console.log("mark as taken:", listing.id);
+  async function handleMarkAsTaken() {
+    setIsSaving(true);
+    setError(undefined);
+
+    const response = await fetch(`/api/listings/${listing.id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...devUserHeader() },
+      body: JSON.stringify({ status: "taken" }),
+    });
+
+    setIsSaving(false);
+
+    if (!response.ok) {
+      const problem = await response.json().catch(() => ({}));
+      setError(problem.error ?? "Could not update this listing.");
+      return;
+    }
+
+    router.refresh();
   }
 
   return (
@@ -59,12 +81,18 @@ export default function MyListingRow({ listing }: MyListingRowProps) {
         <button
           type="button"
           onClick={handleMarkAsTaken}
-          disabled={isTaken}
+          disabled={isTaken || isSaving}
           className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Mark as taken
+          {isSaving ? "Saving…" : "Mark as taken"}
         </button>
       </div>
+
+      {error && (
+        <p role="alert" className="text-sm text-red-700 sm:w-full">
+          {error}
+        </p>
+      )}
     </li>
   );
 }
