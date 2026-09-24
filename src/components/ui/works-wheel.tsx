@@ -211,8 +211,17 @@ export function WorksWheel({
           card.style.opacity = m > 0.5 && Math.abs(d) > CULL ? "0" : "1";
           card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
         }
+        // The card is rotated to sit tangent to the ring; the face is turned
+        // back the same amount so the picture inside stays the right way up.
+        // (Local change to the upstream component: it was written for abstract
+        // art, where a card lying on its side reads fine. A photo of a room
+        // does not.) The drum turns on X, so there is nothing to undo there.
         const face = card?.firstElementChild as HTMLElement | null;
-        if (face) face.style.transform = `scale(${lerp(ringScale, 1, m)})`;
+        if (face) {
+          face.style.transform =
+            `rotateZ(${-(1 - m) * d * (360 / count)}deg)` +
+            ` scale(${lerp(ringScale, 1, m)})`;
+        }
       }
 
       if (labelRef.current) labelRef.current.style.opacity = String(1 - m);
