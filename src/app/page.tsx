@@ -93,6 +93,31 @@ export default async function Home({
     });
 
   return (
+    <div className="mx-auto max-w-3xl">
+      <h1 className="text-3xl font-semibold">StudentSwap</h1>
+      <p className="mt-2 text-zinc-600">
+        Skeleton is running. {active.length} mock apartments loaded — each
+        student now builds their page on their own branch (see the{" "}
+        <code>tasks/</code> folder).
+      </p>
+
+      <ul className="mt-8 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+        {active.map((listing) => (
+          <li key={listing.id} className="flex justify-between gap-4 p-4">
+            <div>
+              <p className="font-medium">
+                {formatRooms(listing.rooms)} in {listing.neighbourhood}, {listing.city}
+              </p>
+              <p className="text-sm text-zinc-500">
+                Available from {formatDate(listing.availableFrom)}
+              </p>
+            </div>
+            <p className="whitespace-nowrap font-medium">
+              {formatRent(listing.rent, listing.currency)}
+            </p>
+          </li>
+        ))}
+      </ul>
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <h1 className="mb-6 text-2xl font-semibold text-zinc-900">
         Find your next apartment
