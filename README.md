@@ -103,6 +103,7 @@ listing form) uses the JSON API — every error is `{ "error": "..." }`:
 | POST | `/api/listings` | body = listing fields, 201 on success |
 | PUT | `/api/listings/:id` | any subset of the fields, owner only |
 | PATCH | `/api/listings/:id/status` | `{ "status": "active" \| "taken" }`, owner only |
+| POST | `/api/ai/describe` | form facts (+ optional `notes`) → `{ "description" }` drafted by Claude; needs `ANTHROPIC_API_KEY`, logged-in only |
 
 Until login exists, write requests in development identify the caller with an
 `x-user-id` header set to a seeded user id (`u-1` … `u-10`). The header is

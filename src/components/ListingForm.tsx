@@ -111,6 +111,8 @@ export default function ListingForm({ initial }: ListingFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>();
+  const [isWriting, setIsWriting] = useState(false);
+  const [writeError, setWriteError] = useState<string | undefined>();
 
   const [existingPhotoUrls] = useState<string[]>(initial?.photos ?? []);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
@@ -197,6 +199,41 @@ export default function ListingForm({ initial }: ListingFormProps) {
       return prev.filter((photo) => photo.url !== url);
     });
     setPhotoError(undefined);
+  }
+
+  // The AI writer needs the basic facts before it can say anything useful.
+  const canWriteDescription =
+    !errors.city && !errors.neighbourhood && !errors.rent && !errors.rooms;
+
+  async function handleWriteDescription() {
+    if (!canWriteDescription || isWriting) return;
+    setIsWriting(true);
+    setWriteError(undefined);
+
+    const response = await fetch("/api/ai/describe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...devUserHeader() },
+      body: JSON.stringify({
+        city: values.city,
+        neighbourhood: values.neighbourhood.trim(),
+        rent: Number(values.rent),
+        currency: values.currency,
+        rooms: Number(values.rooms),
+        availableFrom: values.availableFrom || undefined,
+        availableUntil: values.openEnded ? null : values.availableUntil || undefined,
+        // Anything already typed is sent as notes for the AI to build on.
+        notes: values.description.trim() || undefined,
+      }),
+    }).catch(() => null);
+
+    const result = await response?.json().catch(() => ({}));
+    setIsWriting(false);
+    if (!response?.ok || typeof result?.description !== "string") {
+      setWriteError(result?.error ?? "The AI writer failed. Please try again.");
+      return;
+    }
+    setField("description", result.description);
+    setTouched((prev) => ({ ...prev, description: true }));
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -415,14 +452,30 @@ export default function ListingForm({ initial }: ListingFormProps) {
 
       {/* Description */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-navy">
-          Description
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label htmlFor="description" className="block text-sm font-medium text-navy">
+            Description
+          </label>
+          <button
+            type="button"
+            onClick={handleWriteDescription}
+            disabled={!canWriteDescription || isWriting}
+            title={
+              canWriteDescription
+                ? "Draft a description from the details above. Anything you already wrote is used as notes."
+                : "Fill in city, neighbourhood, rent and rooms first."
+            }
+            className="rounded-full border border-line px-3.5 py-1.5 text-xs font-semibold text-deep transition hover:border-sky disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isWriting ? "Writing…" : "✨ Write it for me"}
+          </button>
+        </div>
         <textarea
           id="description"
           rows={5}
           maxLength={MAX_DESCRIPTION}
           value={values.description}
+          disabled={isWriting}
           onChange={(e) => setField("description", e.target.value)}
           onBlur={() => handleBlur("description")}
           className="mt-1.5 w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-sky"
@@ -433,6 +486,9 @@ export default function ListingForm({ initial }: ListingFormProps) {
             {values.description.length}/{MAX_DESCRIPTION}
           </span>
         </div>
+        {writeError && (
+          <p role="alert" className="mt-1.5 text-xs text-danger">{writeError}</p>
+        )}
       </div>
 
       {/* Photos */}
