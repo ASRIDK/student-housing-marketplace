@@ -216,6 +216,7 @@ Every error is returned as `{ "error": "..." }`.
 | `POST` | `/api/listings` | Create a listing. 201 on success. |
 | `PUT` | `/api/listings/:id` | Update any of its fields. Owner only. |
 | `PATCH` | `/api/listings/:id/status` | `{ "status": "active" \| "taken" }`. Owner only. |
+| `POST` | `/api/ai/describe` | Draft a description from the form's facts and optional notes. Logged-in only. |
 
 Until login exists, write requests in development identify the caller with
 an `x-user-id` header set to a seeded user (`u-1` to `u-10`). The header
