@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CITIES } from "@/lib/types";
-import CityBadge from "@/components/CityBadge";
+import CampusIcon from "@/components/CampusIcon";
 
 export const metadata: Metadata = {
   title: "How it works",
@@ -56,13 +56,19 @@ export default function AboutPage() {
         <p className="mt-2 text-sm text-slate">
           Five campuses, one marketplace. Pick yours to see what is open.
         </p>
-        <div className="mt-5 flex flex-wrap gap-2.5">
+        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {CITIES.map((city) => (
-            <Link key={city} href={`/?city=${city}`} className="transition hover:opacity-80">
-              <CityBadge city={city} />
-            </Link>
+            <li key={city}>
+              <Link
+                href={`/?city=${city}`}
+                className="flex flex-col items-center gap-3 rounded-2xl bg-white px-3 py-5 text-sm font-semibold text-navy transition hover:shadow-md"
+              >
+                <CampusIcon city={city} size={72} />
+                {city}
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       <section className="mt-12 border-t border-line pt-9">
