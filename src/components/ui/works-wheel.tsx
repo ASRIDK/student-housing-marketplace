@@ -29,8 +29,15 @@ export interface WorksWheelProps extends Omit<
   "children"
 > {
   items: WorksWheelItem[];
-  /** Sits in the middle of the ring. @default undefined */
-  label?: string;
+  /**
+   * Sits in the middle of the ring. Takes markup, not just a string, so the
+   * hole in the ring can hold a real headline — it is sized in `em`, so use
+   * em units inside and it scales with the wheel. (Local change to the
+   * upstream component, which took a plain string.)
+   */
+  label?: React.ReactNode;
+  /** What screen readers call the wheel. @default "Works" */
+  name?: string;
   /** Label on the card's hover affordance. Omit to drop it. @default undefined */
   action?: string;
 }
@@ -41,7 +48,10 @@ export interface WorksWheelProps extends Omit<
    swinging on a huge drum. The three that matter are tuned together: STEP
    against DRUM sets how hard the neighbours rotate away, and DRUM against LENS
    decides whether they land inside the frame or run off it. */
-const CARD_H = 0.38; // front card height, of the stage
+/* 0.38 upstream. The ring stands 2.73 card-heights tall once the cards are
+   scaled down, so at 0.38 it is 1.04x the stage and the top and bottom cards
+   are always clipped a little; 0.35 brings the whole ring inside the frame. */
+const CARD_H = 0.35; // front card height, of the stage
 const CARD_MAX_W = 0.34; // ... but never wider than this much of the stage
 const CARD_RATIO = 1.45; // card width / height
 const STEP = 40; // degrees between cards on the drum
@@ -59,6 +69,13 @@ const INDEX = 0.04; // the index down the right-hand side
 /** Items either side of the front still worth drawing. Past this a card is
     edge-on, and further round it would stack up on the vanishing point. */
 const CULL = 1.6;
+/** How far a card on the ring may lean, in degrees.
+    Upstream lets each card turn fully tangent to the circle, which is what
+    makes the ring read as a ring — fine for abstract art, but it stands a
+    photo of a room on its side. So the card still turns tangent and the
+    picture inside is turned back, all but this much: the ring keeps its
+    shape, and nothing is ever far off level. */
+const RING_TILT = 26;
 
 /** How much of a wheel-notch or a dragged pixel counts as one item. */
 const WHEEL_UNITS = 900;
@@ -103,6 +120,7 @@ function place(
 export function WorksWheel({
   items,
   label = "Works '26",
+  name = "Works",
   action = "View",
   className,
   ...props
@@ -166,6 +184,9 @@ export function WorksWheel({
       depth: cardH * LENS,
       title: cardH * TITLE,
       index: cardH * INDEX,
+      // Keeps the label inside the hole in the middle of the ring: the cards
+      // at the sides reach about 1.35 card-heights across it.
+      labelWidth: cardH * 1.35,
     };
   }, [stage, count]);
 
@@ -211,15 +232,16 @@ export function WorksWheel({
           card.style.opacity = m > 0.5 && Math.abs(d) > CULL ? "0" : "1";
           card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
         }
-        // The card is rotated to sit tangent to the ring; the face is turned
-        // back the same amount so the picture inside stays the right way up.
-        // (Local change to the upstream component: it was written for abstract
-        // art, where a card lying on its side reads fine. A photo of a room
-        // does not.) The drum turns on X, so there is nothing to undo there.
+        // The card turns tangent to the ring; the picture is turned back, less
+        // RING_TILT degrees of lean so the ring still reads as a ring. Zero at
+        // the top and bottom of the circle, most at the sides — the way loose
+        // photos fall. The drum turns on X, so there is nothing to undo there.
+        const ringDeg = d * (360 / count);
+        const tilt = RING_TILT * Math.sin(rad(ringDeg));
         const face = card?.firstElementChild as HTMLElement | null;
         if (face) {
           face.style.transform =
-            `rotateZ(${-(1 - m) * d * (360 / count)}deg)` +
+            `rotateZ(${-(1 - m) * (ringDeg - tilt)}deg)` +
             ` scale(${lerp(ringScale, 1, m)})`;
         }
       }
@@ -273,7 +295,7 @@ export function WorksWheel({
 
   return (
     <section
-      aria-label={label}
+      aria-label={name}
       className={cn(
         "bg-background text-foreground relative h-full min-h-[24rem] w-full overflow-hidden select-none",
         className,
@@ -284,7 +306,7 @@ export function WorksWheel({
         ref={stageRef}
         tabIndex={0}
         role="listbox"
-        aria-label={label}
+        aria-label={name}
         aria-activedescendant={`works-wheel-${active}`}
         className="focus-visible:outline-foreground absolute inset-0 cursor-grab touch-pan-x outline-none focus-visible:outline-2 focus-visible:-outline-offset-4 active:cursor-grabbing"
         style={{ perspective: `${metrics.depth}px` }}
@@ -373,10 +395,10 @@ export function WorksWheel({
           proportions inside a card as well as at full bleed. */}
       <div
         ref={labelRef}
-        className="pointer-events-none absolute inset-0 grid place-items-center tracking-tight"
+        className="pointer-events-none absolute inset-0 grid place-items-center px-6 text-center tracking-tight"
         style={{ fontSize: metrics.title }}
       >
-        {label}
+        <div style={{ maxWidth: metrics.labelWidth }}>{label}</div>
       </div>
       <div
         ref={titleRef}

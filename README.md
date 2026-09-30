@@ -1,109 +1,233 @@
-# StudentSwap — apartment handover for international students
+<div align="center">
 
-A website where students from our school can list their apartment in
-**Milan, Madrid, Geneva, Paris or Marseille** so that another student can
-take it over when they move to a different campus.
+<img src="public/campuses/milan.png" width="44" alt=""> <img src="public/campuses/madrid.png" width="44" alt=""> <img src="public/campuses/geneva.png" width="44" alt=""> <img src="public/campuses/paris.png" width="44" alt=""> <img src="public/campuses/marseille.png" width="44" alt="">
 
-Class: Data Science — Prompt Engineering with GitHub.
+# StudentSwap
+
+**Take over a classmate's apartment when you move campus.**
+
+A marketplace where Albert School students hand their apartment directly to
+the student arriving, across Milan, Madrid, Geneva, Paris and Marseille.
+
+[![CI](https://github.com/ASRIDK/student-housing-marketplace/actions/workflows/ci.yml/badge.svg)](https://github.com/ASRIDK/student-housing-marketplace/actions/workflows/ci.yml)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
+![Postgres](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
+![Gemini](https://img.shields.io/badge/AI-Gemini-4285f4?logo=googlegemini&logoColor=white)
+
+<img src="assets/screenshots/home.jpg" alt="The StudentSwap home page: a ring of real apartment photos around the headline 'Someone is leaving your campus. Take their keys.'" width="860">
+
+</div>
+
+---
+
+[Overview](#overview) ·
+[Features](#features) ·
+[Tech stack](#tech-stack) ·
+[Architecture](#architecture) ·
+[Getting started](#getting-started) ·
+[Project structure](#project-structure) ·
+[AI usage](#ai-usage) ·
+[Challenges](#challenges) ·
+[Future improvements](#future-improvements) ·
+[Team](#team)
+
+## Overview
+
+**The problem.** Albert School students move between five campuses. Every
+term, someone leaves a flat in one city while someone else arrives looking
+for one — and an agency usually takes a fee in between.
+
+**The idea.** Connect the two directly. The leaving student posts their
+apartment, the arriving student takes it over, and the landlord keeps a
+tenant without a gap.
+
+StudentSwap was built as the group project of the *Prompt Engineering & Git*
+course (Bachelor 2, DAT32-91, Albert School, 2026–27), using AI as a working
+tool throughout and Git/GitHub as the team's shared workspace.
+
+## Features
+
+| | |
+|---|---|
+| **Browse** | Every open apartment across the five campuses, with campus tabs, a move-in date filter, a maximum-rent filter and sorting. Filters live in the URL, so a search can be shared. |
+| **Listing page** | Photo gallery, rent, handover dates, a countdown to the day it is free, a share link, and a contact card that emails the current tenant. |
+| **Post and edit** | A validated form with a draft that saves itself. Photos come first: **Fill in from my photos** lets AI count the rooms and draft the description, and **Write it for me** drafts the description from the facts. The student always reviews before anything is saved. |
+| **My listings** | Your apartments, with editing and a button to mark each one as taken. |
+| **API** | JSON endpoints with input validation and consistent errors. |
+| **Responsive** | Every page works from phone to desktop. |
+
+<p>
+<img src="assets/screenshots/browse.jpg" alt="The browse grid: campus tabs with landmark icons above a grid of apartment cards" width="49%">
+<img src="assets/screenshots/post.jpg" alt="The post-a-listing form: photos first, with a button to fill in the listing from them" width="49%">
+</p>
 
 ## Tech stack
 
-| Part          | Tool                                | Owner   |
-|---------------|-------------------------------------|---------|
-| Framework     | Next.js 16 (App Router) + TypeScript| Taoufik (skeleton) |
-| Styling       | Tailwind CSS                        | everyone |
-| Database      | Neon Postgres (via Prisma)          | Taoufik |
-| Photos        | Vercel Blob                         | Taoufik |
-| Auth          | Email + password (school domain)    | Taoufik |
-| Hosting       | Vercel (auto-deploys from GitHub)   | Taoufik |
+| Layer | Technologies |
+|---|---|
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| **Backend** | Next.js API routes, Prisma 7, Neon Postgres, Zod |
+| **AI** | Google Gemini (photo analysis and description drafting) |
+| **Quality** | ESLint, Vitest, GitHub Actions |
 
-## Who does what
+## Architecture
 
-| GitHub user                     | Branch                     | Task                                   |
-|---------------------------------|----------------------------|----------------------------------------|
-| Taoufik (lead)                  | `main`                     | Skeleton, database, API, auth, deploy, merging PRs |
-| alejandromirandadefrutos7-sudo  | `feature/browse-listings`| Home page: listing cards + filters      |
-| leovurchio06-gif                | `feature/listing-detail`       | Listing detail page + "My listings"     |
-| comedevalk-cyber                | `feature/listing-form`        | "Post a listing" / "Edit listing" form  |
-| Andrea-CALLIES                  | `feature/layout-auth-ui`    | Site layout, navbar, login/signup pages |
+```mermaid
+flowchart TD
+    student(["Student in the browser"])
 
-Every student has a personal instruction file in `tasks/`.
-**Read `tasks/00-EVERYONE-READ-THIS-FIRST.txt` before anything else.**
+    subgraph next["Next.js server"]
+        pages["Server Components<br/>render every page per request"]
+        api["API routes<br/>/api/listings · /api/ai"]
+    end
 
-## Running the project
+    subgraph lib["src/lib"]
+        schema["Zod validation"]
+        listings["listings.ts<br/>every database query"]
+        ai["AI prompts<br/>photo analysis · descriptions"]
+    end
+
+    db[("Neon Postgres")]
+    gemini(["Gemini API"])
+
+    student -- "page request" --> pages
+    student -- "form actions, JSON" --> api
+    pages --> listings
+    api --> schema --> listings
+    api --> ai
+    listings -- "Prisma, WebSocket on 443" --> db
+    ai -- "photos and facts in, JSON out" --> gemini
+```
+
+Two rules hold the design together: only `src/lib/listings.ts` talks to the
+database, and only the server ever holds the AI key.
+
+An animated, step-by-step walkthrough of the same architecture, from the
+user's point of view (browsing, posting with photos, handing over, and how
+code reaches `main`), is in
+[`documentation/architecture.html`](documentation/architecture.html). Open it
+in a browser; click to restart.
+
+## Getting started
+
+**Requirements:** Node.js 22+, a [Neon](https://neon.com) Postgres database
+(the free tier is enough) and, for the AI features, a
+[Gemini API key](https://aistudio.google.com/apikey).
 
 ```bash
+git clone https://github.com/ASRIDK/student-housing-marketplace.git
+cd student-housing-marketplace
 npm install
-cp .env.example .env.local   # ask Taoufik for the database connection strings
+
+cp .env.example .env.local   # fill in the values below
+npm run db:generate          # generate the Prisma client
+npm run db:deploy            # create the tables
+npm run db:seed              # load ten sample listings
+
 npm run dev                  # http://localhost:3000
 ```
 
-Node 22 or newer is required. The app reads from a Neon Postgres database
-through the Neon serverless driver (port 443), so it works on networks that
-block the usual Postgres port.
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Neon **pooled** connection string (host contains `-pooler`) |
+| `DATABASE_URL_UNPOOLED` | Neon **direct** connection string, used for migrations |
+| `GEMINI_API_KEY` | Optional. Without it the site works and the AI buttons say they are not set up. |
 
-Before opening a pull request, make sure these all pass:
+> On networks that block port 5432, the app still works over port 443, but
+> `db:deploy` needs 5432: run it once from another network.
+
+**Checks** (run on GitHub for every pull request):
 
 ```bash
-npm run lint        # code style
-npm run typecheck   # TypeScript
-npm test            # unit tests (Vitest)
-npm run build       # production build
+npm run lint && npm run typecheck && npm test && npm run build
 ```
 
-## Design system
+### API
 
-The site uses Albert School's own colours (taken from albertschool.com) with a
-photo-first, marketplace-style layout. All tokens live at the top of
-`src/app/globals.css` — use the Tailwind classes, never a raw hex.
+Errors are always `{ "error": "..." }`.
 
-| Token | Hex | Class | Use it for |
-|---|---|---|---|
-| navy | `#202448` | `bg-navy` `text-navy` | navbar, footer, headings, primary buttons |
-| sky | `#2eaee0` | `bg-sky` | only things you can act on, focus rings |
-| deep | `#035ca0` | `text-deep` | text links and hover states |
-| mist | `#eaeff6` | `bg-mist` | quiet grounds, chips, image placeholders |
-| ink | `#12142b` | `text-ink` | body text |
-| slate | `#5b6480` | `text-slate` | secondary text |
-| line | `#dfe4ee` | `border-line` | borders and dividers |
-
-Rules everyone follows:
-
-- **Blue means action.** Never colour plain text `sky` — if it is blue, it is
-  clickable.
-- **One font.** Inter, self-hosted in `src/app/fonts` (no Google Fonts call at
-  build time). Hierarchy comes from weight and size: add `display` to big
-  headings and `title` to section headings for the right letter-spacing.
-- **The layout owns the shell.** `layout.tsx` renders the only `<main>`; each
-  page sets its own width and padding (`mx-auto max-w-6xl px-5 sm:px-8`).
-- **One badge per campus.** Use `<CityBadge city={...} />`, don't invent
-  colours.
-- **Rounded, not shadowed.** Cards use `rounded-2xl`/`rounded-3xl` and a
-  border; keep shadows for things that float above the page.
-
-Shared code lives in `src/lib/`: `types.ts` (the `Listing` shape), `format.ts`
-(`formatDate`, `formatRent`, `formatRooms`), `listings.ts` (every database
-query) and `mock-data.ts` (the ten listings used to seed the database).
-
-## Database and API
-
-| Command | What it does |
-|---|---|
-| `npm run db:migrate` | create/apply a migration after editing `prisma/schema.prisma` |
-| `npm run db:seed` | load the ten mock listings (safe to re-run) |
-| `npm run db:studio` | browse the database in the browser |
-
-Server components call `src/lib/listings.ts` directly. Client code (the
-listing form) uses the JSON API — every error is `{ "error": "..." }`:
-
-| Method | Route | Notes |
+| Method | Route | |
 |---|---|---|
-| GET | `/api/listings?city=&maxRent=&availableFrom=&sort=` | active listings; `sort` = newest, cheapest, expensive |
-| GET | `/api/listings/:id` | 404 if unknown |
-| POST | `/api/listings` | body = listing fields, 201 on success |
-| PUT | `/api/listings/:id` | any subset of the fields, owner only |
-| PATCH | `/api/listings/:id/status` | `{ "status": "active" \| "taken" }`, owner only |
+| `GET` | `/api/listings?city=&maxRent=&availableFrom=&sort=` | Open listings |
+| `GET` | `/api/listings/:id` | One listing |
+| `POST` | `/api/listings` | Create a listing |
+| `PUT` | `/api/listings/:id` | Update a listing (owner only) |
+| `PATCH` | `/api/listings/:id/status` | Mark as `active` or `taken` (owner only) |
+| `POST` | `/api/ai/analyze-photos` | Photos in, room count and draft description out |
+| `POST` | `/api/ai/describe` | Listing facts in, draft description out |
 
-Until login exists, write requests in development identify the caller with an
-`x-user-id` header set to a seeded user id (`u-1` … `u-10`). The header is
-ignored in production.
+## Project structure
+
+```text
+.
+├── .github/              CI workflow and code owners
+├── assets/screenshots/   Images used in this README
+├── documentation/        Challenges, LLM failure modes, design system
+├── prisma/               Database schema, migrations and seed script
+├── prompts/              Versioned prompt iterations and their evaluation
+├── public/campuses/      Campus landmark icons
+├── src/
+│   ├── app/              Pages and API routes
+│   ├── components/       UI components
+│   └── lib/              Queries, validation, AI prompts, shared types
+└── tasks/                Project briefs and prompt logs
+```
+
+## AI usage
+
+AI was used in two ways.
+
+**To build the project.** The team worked with AI coding assistants
+(Claude Code and Claude). Every task started from a written brief with a
+starter prompt: the stack, the shared data type, one file to build, hard
+constraints and a "done when" checklist. Every AI output was built, tested
+in the browser and reviewed in a pull request like any other code.
+
+**Inside the product.** Two features call Gemini from the server: reading a
+listing's photos to count the rooms and draft a description, and drafting a
+description from the form's facts. Both return a suggestion the student
+must accept, and both treat user text and text inside photos as data, never
+as instructions.
+
+| Where | What it contains |
+|---|---|
+| [`prompts/`](prompts/) | One prompt followed through four versions, scored on measurable criteria |
+| [`tasks/`](tasks/) | The briefs and the prompt logs |
+| [`documentation/llm-failure-modes.md`](documentation/llm-failure-modes.md) | Hallucination, sycophancy, prompt injection and context limits, each with a real case from the project |
+
+## Challenges
+
+Full write-ups: [documentation/challenges.md](documentation/challenges.md).
+
+- **The school network blocks Postgres** (port 5432). Solved by connecting
+  through Neon's serverless driver over port 443.
+- **Main stopped compiling after several merges**, because a conflict was
+  resolved in GitHub's web editor. Solved with an integration pass; checks
+  now run on every pull request.
+- **Libraries newer than the AI's knowledge** (Prisma 7, Zod 4). The
+  installed version's error messages were trusted over the suggestions.
+- **A 3D component built for artwork**, adapted to apartment photos over
+  four prompt iterations.
+
+## Future improvements
+
+- Real accounts (sign-up limited to the school email domain)
+- Photo upload and storage
+- Deployment with a preview for every pull request
+- Messaging between students
+- End-to-end tests in CI
+
+**Known limitations today:** login and sign-up are interface only (in
+development, the API uses a demo user); listing photos are links rather
+than uploads; the site runs locally and is not deployed yet.
+
+## Team
+
+Taoufik ([@ASRIDK](https://github.com/ASRIDK)) ·
+Alejandro ([@alejandromirandadefrutos7-sudo](https://github.com/alejandromirandadefrutos7-sudo)) ·
+Andrea ([@andrea-callies](https://github.com/andrea-callies)) ·
+Leo ([@leovurchio06-gif](https://github.com/leovurchio06-gif)) ·
+Côme ([@comedevalk-cyber](https://github.com/comedevalk-cyber))
+
+Albert School, Bachelor 2 Data & AI, 2026–27. Campus icons generated with Gemini.

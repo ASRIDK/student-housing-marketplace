@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CampusIcon from "@/components/CampusIcon";
 import { CITIES, type City } from "@/lib/types";
 
 type Props = {
@@ -40,11 +41,13 @@ export default function CityTabs({ counts, total, current, params }: Props) {
                 href={href(tab.city)}
                 aria-current={active ? "page" : undefined}
                 className={
-                  active
-                    ? "inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-semibold text-white"
-                    : "inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-slate transition hover:border-navy hover:text-navy"
+                  (tab.city ? "pl-1.5 " : "pl-4 ") +
+                  (active
+                    ? "inline-flex items-center gap-2 rounded-full bg-navy py-1.5 pr-4 text-sm font-semibold text-white"
+                    : "inline-flex items-center gap-2 rounded-full border border-line bg-white py-1.5 pr-4 text-sm font-medium text-slate transition hover:border-navy hover:text-navy")
                 }
               >
+                {tab.city && <CampusIcon city={tab.city} size={26} className="rounded-full" />}
                 {tab.label}
                 <span className={active ? "text-white/60" : "text-slate/70"}>{tab.count}</span>
               </Link>
