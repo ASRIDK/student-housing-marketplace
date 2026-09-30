@@ -1,0 +1,51 @@
+name: CI
+
+# The same four checks every contributor runs before opening a pull request,
+# now run by GitHub on every pull request and on every push to main.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to a branch cancels the run still going for the previous one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # src/lib/db.ts builds the Prisma client as soon as a route module loads,
+      # so the build needs a well-formed connection string. Nothing connects to
+      # it: every page that reads the database renders per request, never at
+      # build time. No secret is needed to run CI.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
