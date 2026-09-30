@@ -103,6 +103,12 @@ flowchart TD
 Two rules hold the design together: only `src/lib/listings.ts` talks to the
 database, and only the server ever holds the AI key.
 
+An animated, step-by-step walkthrough of the same architecture, from the
+user's point of view (browsing, posting with photos, handing over, and how
+code reaches `main`), is in
+[`documentation/architecture.html`](documentation/architecture.html). Open it
+in a browser; click to restart.
+
 ## Getting started
 
 **Requirements:** Node.js 22+, a [Neon](https://neon.com) Postgres database

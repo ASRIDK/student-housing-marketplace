@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudentSwap Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root {
+    --bg: #0d1024;
+    --panel: #141933;
+    --panel-line: #262c4d;
+    --box: #1a2040;
+    --box-line: #2f365c;
+    --text: #f4f7fb;
+    --muted: #a8b4cf;
+    --dim: #6f7aa0;
+    --sky: #2eaee0;
+    --gold: #e7a92d;
+    --teal: #14a38b;
+    --violet: #8b74e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); overflow: hidden; }
+  body { font-family: "Inter", system-ui, sans-serif; color: var(--text); }
+  #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; flex: none;
+    background:
+      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px) 0 0 / 40px 40px,
+      var(--bg);
+    transform-origin: center center;
+    overflow: hidden;
+  }
+  .abs { position: absolute; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--panel-line); border-radius: 16px;
+  }
+  .panel h3 {
+    position: absolute; left: 24px; top: 20px; font-size: 14px; font-weight: 700;
+    letter-spacing: 3.5px; text-transform: uppercase; color: var(--muted);
+  }
+  .box {
+    background: var(--box); border: 1.5px solid var(--box-line); border-radius: 12px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; gap: 6px; padding: 0 16px;
+  }
+  .box b { font-size: 23px; font-weight: 600; letter-spacing: -0.2px; }
+  .box span { font-size: 15.5px; color: var(--muted); }
+  .box.sky { background: #0f2a40; border-color: rgba(46,174,224,0.45); }
+  .box.gold { background: #33290f; border-color: rgba(231,169,45,0.5); }
+  .box.teal { background: #0d302d; border-color: rgba(20,163,139,0.55); }
+  .box.violet { background: #231c47; border-color: rgba(139,116,232,0.55); }
+  .box.code b { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 21px; }
+  svg#wires { position: absolute; inset: 0; overflow: visible; }
+  .chip {
+    position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
+    background: var(--bg); border: 1px solid #3a4270; border-radius: 7px;
+    padding: 5px 10px; font-size: 15px; font-weight: 500; color: #dfe6f5;
+  }
+  #header { position: absolute; left: 60px; top: 48px; right: 60px; display: flex; align-items: center; gap: 18px; }
+  #logo {
+    width: 44px; height: 44px; border-radius: 11px; background: var(--sky); color: #202448;
+    display: grid; place-items: center; font-weight: 800; font-size: 17px;
+  }
+  #brand { font-size: 22px; font-weight: 700; }
+  #brand small { font-weight: 500; color: var(--muted); margin-left: 10px; font-size: 18px; }
+  #chapter { margin-left: auto; font-size: 18px; font-weight: 600; color: var(--sky); letter-spacing: 0.3px; }
+  #caption {
+    position: absolute; left: 160px; right: 160px; top: 968px; text-align: center;
+    font-size: 31px; line-height: 1.35; font-weight: 500; color: var(--text);
+  }
+  #title, #ending {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; background: rgba(13,16,36,0.94);
+  }
+  #title h1 { font-size: 104px; font-weight: 800; letter-spacing: -3px; }
+  #title p { margin-top: 24px; font-size: 34px; color: var(--muted); }
+  #ending h2 { font-size: 30px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--sky); }
+  #ending .rule { margin-top: 30px; font-size: 54px; font-weight: 700; letter-spacing: -1px; }
+  #ending .rule em { font-style: normal; color: var(--gold); }
+  .check {
+    position: absolute; transform: translate(-50%, 0); font-size: 15px; font-weight: 600;
+    color: #0d1024; background: var(--teal); border-radius: 999px; padding: 4px 11px;
+  }
+  .badge {
+    position: absolute; transform: translate(-50%, -50%); font-size: 18px; font-weight: 700;
+    color: #0d1024; border-radius: 999px; padding: 5px 13px;
+  }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+  <div id="header">
+    <div id="logo">SS</div>
+    <div id="brand">StudentSwap<small>how it works, step by step</small></div>
+    <div id="chapter"></div>
+  </div>
+  <div id="panels"></div>
+  <svg id="wires" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+  <div id="boxes"></div>
+  <div id="overlays"></div>
+  <div id="caption"></div>
+  <div id="title">
+    <h1>How StudentSwap works</h1>
+    <p>From a student&rsquo;s tap to the database, step by step</p>
+  </div>
+  <div id="ending">
+    <h2>Two rules hold it together</h2>
+    <p class="rule">Only <em>listings.ts</em> talks to the database.</p>
+    <p class="rule">Only the <em>server</em> holds the AI key.</p>
+  </div>
+</div></div>
+
+<script>
+// ---------------------------------------------------------------- layout
+// Everything is placed on a fixed 1920×1080 stage, and every frame is a
+// pure function of time: renderAt(ms) draws the whole scene for that
+// moment. That is what lets the video be recorded frame by frame.
+
+const PANELS = [
+  { id: "pA", x: 60,   y: 140, w: 380, h: 630, title: "The student", at: 3000 },
+  { id: "pB", x: 555,  y: 140, w: 380, h: 630, title: "Next.js server", at: 3500 },
+  { id: "pC", x: 1050, y: 140, w: 380, h: 630, title: "Our code · src/lib", at: 4000 },
+  { id: "pD", x: 1545, y: 140, w: 315, h: 630, title: "Data & AI", at: 4500 },
+  { id: "pE", x: 60,   y: 800, w: 1800, h: 135, title: "How it's built", at: 5000 },
+];
+
+const BOXES = [
+  { id: "A1", p: "pA", x: 84,   y: 200, w: 332, h: 110, t: "Browse", s: "campus tabs · filters in the URL" },
+  { id: "A2", p: "pA", x: 84,   y: 340, w: 332, h: 110, t: "Open a listing", s: "photos · countdown · contact" },
+  { id: "A3", p: "pA", x: 84,   y: 480, w: 332, h: 110, t: "Post a place", s: "photos first · AI fill-in" },
+  { id: "A4", p: "pA", x: 84,   y: 620, w: 332, h: 110, t: "My listings", s: "edit · mark as taken" },
+  { id: "B1", p: "pB", x: 579,  y: 215, w: 332, h: 125, t: "Server Components", s: "render each page, every request", c: "sky" },
+  { id: "B2", p: "pB", x: 579,  y: 405, w: 332, h: 125, t: "API routes", s: "/api/listings · /api/ai", c: "sky" },
+  { id: "B3", p: "pB", x: 579,  y: 595, w: 332, h: 125, t: "Validation", s: "Zod checks every input", c: "gold" },
+  { id: "C1", p: "pC", x: 1074, y: 215, w: 332, h: 125, t: "listings.ts", s: "the only file that queries", c: "code" },
+  { id: "C2", p: "pC", x: 1074, y: 405, w: 332, h: 125, t: "photo-analysis.ts", s: "prompt · JSON schema", c: "code" },
+  { id: "C3", p: "pC", x: 1074, y: 595, w: 332, h: 125, t: "ai-description.ts", s: "prompt · notes as data", c: "code" },
+  { id: "D1", p: "pD", x: 1569, y: 250, w: 267, h: 140, t: "Neon Postgres", s: "users · listings", c: "teal" },
+  { id: "D2", p: "pD", x: 1569, y: 480, w: 267, h: 140, t: "Gemini", s: "reads photos · drafts text", c: "violet" },
+  { id: "E1", p: "pE", x: 330,  y: 846, w: 250, h: 70, t: "Branch", s: "one per change" },
+  { id: "E2", p: "pE", x: 644,  y: 846, w: 250, h: 70, t: "Pull request", s: "described · reviewed" },
+  { id: "E3", p: "pE", x: 958,  y: 846, w: 250, h: 70, t: "GitHub Actions", s: "lint · types · tests · build", c: "gold" },
+  { id: "E4", p: "pE", x: 1272, y: 846, w: 250, h: 70, t: "Review & merge", s: "one approval required" },
+  { id: "E5", p: "pE", x: 1586, y: 846, w: 250, h: 70, t: "main", s: "what everyone builds on", c: "sky" },
+];
+const box = Object.fromEntries(BOXES.map((b) => [b.id, b]));
+
+// Edge endpoints: side midpoints, nudged when two wires meet one side.
+function rightOf(id, dy = 0) { const b = box[id]; return [b.x + b.w, b.y + b.h / 2 + dy]; }
+function leftOf(id, dy = 0) { const b = box[id]; return [b.x, b.y + b.h / 2 + dy]; }
+function bottomOf(id) { const b = box[id]; return [b.x + b.w / 2, b.y + b.h]; }
+function topOf(id) { const b = box[id]; return [b.x + b.w / 2, b.y]; }
+function curve([x1, y1], [x2, y2]) {
+  const dx = (x2 - x1) / 2;
+  return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+}
+function line([x1, y1], [x2, y2]) { return `M ${x1} ${y1} L ${x2} ${y2}`; }
+
+const EDGES = {
+  A1B1: curve(rightOf("A1"), leftOf("B1", -20)),
+  A2B1: curve(rightOf("A2"), leftOf("B1", 20)),
+  A3B2: curve(rightOf("A3"), leftOf("B2", -20)),
+  A4B2: curve(rightOf("A4"), leftOf("B2", 20)),
+  B1C1: curve(rightOf("B1"), leftOf("C1", -20)),
+  B2B3: line(bottomOf("B2"), topOf("B3")),
+  B3C1: curve(rightOf("B3", -20), leftOf("C1", 20)),
+  B2C2: curve(rightOf("B2", -20), leftOf("C2")),
+  B2C3: curve(rightOf("B2", 20), leftOf("C3")),
+  C1D1: curve(rightOf("C1"), leftOf("D1")),
+  C2D2: curve(rightOf("C2"), leftOf("D2", -20)),
+  C3D2: curve(rightOf("C3"), leftOf("D2", 20)),
+  E1E2: line(rightOf("E1"), leftOf("E2")),
+  E2E3: line(rightOf("E2"), leftOf("E3")),
+  E3E4: line(rightOf("E3"), leftOf("E4")),
+  E4E5: line(rightOf("E4"), leftOf("E5")),
+  E5E1: (() => {
+    const [x1, y1] = bottomOf("E5"), [x2, y2] = bottomOf("E1");
+    return `M ${x1} ${y1} L ${x1} ${y1 + 12} L ${x2} ${y1 + 12} L ${x2} ${y2}`;
+  })(),
+};
+const DASHED = new Set(["E5E1"]);
+
+// ---------------------------------------------------------------- story
+// Each step: when it runs, what travels where, what it is labelled, and
+// the caption. dir -1 means the packet travels the wire backwards.
+const CHAPTERS = [
+  { from: 7000,  to: 25000, name: "1 · Browsing" },
+  { from: 25000, to: 53500, name: "2 · Posting with photos" },
+  { from: 53500, to: 65500, name: "3 · Handing it over" },
+  { from: 65500, to: 79000, name: "4 · How it's built" },
+];
+
+const STEPS = [
+  // 1 · Browsing
+  { at: 7000,  end: 9500,  glow: ["A1"], cap: "A student opens StudentSwap and picks the Paris campus." },
+  { at: 9500,  end: 12000, edge: "A1B1", label: "GET /?city=Paris", cap: "The browser asks the Next.js server for the page." },
+  { at: 12000, end: 14500, edge: "B1C1", label: "getListings({ city })", cap: "The page is a Server Component: it asks listings.ts, on the server." },
+  { at: 14500, end: 17000, edge: "C1D1", label: "SQL over port 443", color: "teal", cap: "listings.ts is the only file that talks to the database. Prisma sends the query to Neon Postgres." },
+  { at: 17000, end: 19500, edge: "C1D1", dir: -1, label: "rows", color: "teal", cap: "Postgres answers with the open flats in Paris." },
+  { at: 19500, end: 22000, edge: "B1C1", dir: -1, label: "listings", cap: "listings.ts hands them back to the page…" },
+  { at: 22000, end: 25000, edge: "A1B1", dir: -1, label: "HTML, already filled in", cap: "…which arrives in the browser already filled in." },
+
+  // 2 · Posting with photos
+  { at: 25000, end: 27500, glow: ["A3"], cap: "Another student posts their flat. Photos come first." },
+  { at: 27500, end: 30000, edge: "A3B2", label: "3 photos, shrunk to 1280px", cap: "The browser shrinks the photos and sends them to /api/ai/analyze-photos." },
+  { at: 30000, end: 32500, glow: ["B2"], badge: { on: "B2", text: "logged in · ≤ 5 photos · images only", color: "gold" }, cap: "The route checks who is asking and what was sent." },
+  { at: 32500, end: 35000, edge: "B2C2", label: "photos", cap: "photo-analysis.ts holds the prompt, and the JSON shape the answer must follow." },
+  { at: 35000, end: 38500, edge: "C2D2", label: "prompt + images + schema", color: "violet", cap: "Gemini looks at the photos. Text inside a photo is treated as picture, never as an order." },
+  { at: 38500, end: 41000, edge: "C2D2", dir: -1, label: "JSON: 2 rooms · kitchen · draft", color: "violet", cap: "It answers in that fixed shape: the room count, what it saw, a draft description." },
+  { at: 41000, end: 43000, glow: ["C2"], badge: { on: "C2", text: "checked again with Zod", color: "teal" }, cap: "Our code checks the answer again before trusting it." },
+  { at: 43000, end: 44500, edge: "B2C2", dir: -1, label: "analysis" },
+  { at: 44500, end: 47000, edge: "A3B2", dir: -1, label: "“What we saw”", cap: "The form shows the suggestion. Nothing changes until the student presses “Use these details”." },
+  { at: 47000, end: 49000, edge: "A3B2", label: "POST /api/listings", cap: "Accepted and published: the listing goes to the API…" },
+  { at: 49000, end: 50500, edge: "B2B3", label: "the listing", color: "gold", cap: "…Zod checks every field…" },
+  { at: 50500, end: 52000, edge: "B3C1", label: "valid" },
+  { at: 52000, end: 53500, edge: "C1D1", label: "INSERT", color: "teal", cap: "…and listings.ts saves it in Postgres. It is live on Browse." },
+
+  // 3 · Handing it over
+  { at: 53500, end: 55500, glow: ["A4"], cap: "Keys handed over: the owner opens My listings and presses “Mark as taken”." },
+  { at: 55500, end: 57500, edge: "A4B2", label: "PATCH /status: taken", cap: "The browser sends one small request to the API." },
+  { at: 57500, end: 59000, edge: "B2B3", label: "owner? valid status?", color: "gold", cap: "Only the owner may do this, and Zod checks the new status." },
+  { at: 59000, end: 60500, edge: "B3C1", label: "valid" },
+  { at: 60500, end: 62500, edge: "C1D1", label: "UPDATE", color: "teal", cap: "Postgres marks the flat as taken…" },
+  { at: 62500, end: 65500, glow: ["A1"], badge: { on: "A1", text: "− 1 flat", color: "sky" }, cap: "…so it disappears from Browse, for everyone, on the next page load." },
+
+  // 4 · How it's built
+  { at: 65500, end: 67500, glow: ["E1"], cap: "Behind every feature: one branch per change." },
+  { at: 67500, end: 69500, edge: "E1E2", cap: "Then a pull request, described and reviewed." },
+  { at: 69500, end: 73000, edge: "E2E3", checks: true, cap: "GitHub Actions runs four checks on every pull request, automatically." },
+  { at: 73000, end: 75000, edge: "E3E4", cap: "Only then is it approved and merged…" },
+  { at: 75000, end: 77000, edge: "E4E5", cap: "…into main, the version everyone builds on." },
+  { at: 77000, end: 79000, edge: "E5E1", cap: "And the next change starts again from there." },
+];
+
+const TOTAL = 84000;
+const COLORS = { sky: "#2eaee0", teal: "#14a38b", violet: "#8b74e8", gold: "#e7a92d" };
+
+// ---------------------------------------------------------------- build DOM
+const stage = document.getElementById("stage");
+const panelsEl = document.getElementById("panels");
+const boxesEl = document.getElementById("boxes");
+const wires = document.getElementById("wires");
+const overlays = document.getElementById("overlays");
+const captionEl = document.getElementById("caption");
+const chapterEl = document.getElementById("chapter");
+const titleEl = document.getElementById("title");
+const endingEl = document.getElementById("ending");
+const NS = "http://www.w3.org/2000/svg";
+
+const panelEls = {};
+for (const p of PANELS) {
+  const el = document.createElement("div");
+  el.className = "panel abs";
+  Object.assign(el.style, { left: p.x + "px", top: p.y + "px", width: p.w + "px", height: p.h + "px" });
+  el.innerHTML = `<h3>${p.title}</h3>`;
+  panelsEl.appendChild(el);
+  panelEls[p.id] = el;
+}
+
+const boxEls = {};
+for (const b of BOXES) {
+  const el = document.createElement("div");
+  el.className = `box abs ${b.c || ""}`;
+  Object.assign(el.style, { left: b.x + "px", top: b.y + "px", width: b.w + "px", height: b.h + "px" });
+  el.innerHTML = `<b>${b.t}</b><span>${b.s}</span>`;
+  boxesEl.appendChild(el);
+  boxEls[b.id] = el;
+}
+
+const defs = document.createElementNS(NS, "defs");
+defs.innerHTML = `<filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+  <feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+wires.appendChild(defs);
+
+const pathEls = {};
+for (const [id, d] of Object.entries(EDGES)) {
+  const path = document.createElementNS(NS, "path");
+  path.setAttribute("d", d);
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke-linecap", "round");
+  if (DASHED.has(id)) path.setAttribute("stroke-dasharray", "7 7");
+  wires.appendChild(path);
+  pathEls[id] = path;
+}
+const lengths = Object.fromEntries(Object.entries(pathEls).map(([id, p]) => [id, p.getTotalLength()]));
+
+const trail = [];
+for (let i = 0; i < 6; i++) {
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("r", String(10 - i * 1.3));
+  wires.appendChild(c);
+  trail.push(c);
+}
+trail[0].setAttribute("filter", "url(#glow)");
+
+const chip = document.createElement("div");
+chip.className = "chip";
+overlays.appendChild(chip);
+const badge = document.createElement("div");
+badge.className = "badge";
+overlays.appendChild(badge);
+
+const CHECKS = ["lint ✓", "types ✓", "tests ✓", "build ✓"];
+const checkEls = CHECKS.map((text, i) => {
+  const el = document.createElement("div");
+  el.className = "check";
+  el.textContent = text;
+  const b = box.E3;
+  el.style.left = b.x + b.w / 2 + (i - 1.5) * 96 + "px";
+  el.style.top = b.y - 36 + "px";
+  overlays.appendChild(el);
+  return el;
+});
+
+// ---------------------------------------------------------------- render
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const ramp = (t, from, dur) => clamp((t - from) / dur);
+
+function renderAt(t) {
+  t = ((t % TOTAL) + TOTAL) % TOTAL;
+
+  // Title card, then the ending card.
+  titleEl.style.opacity = String(1 - ramp(t, 2400, 600));
+  const endIn = ramp(t, 79500, 800);
+  endingEl.style.opacity = String(endIn * (1 - ramp(t, TOTAL - 300, 300)));
+
+  // Build-in: panels, then boxes, then wires.
+  for (const p of PANELS) {
+    const k = ease(ramp(t, p.at, 700));
+    panelEls[p.id].style.opacity = String(k);
+    panelEls[p.id].style.transform = `translateY(${(1 - k) * 24}px)`;
+  }
+  for (const b of BOXES) {
+    const p = PANELS.find((q) => q.id === b.p);
+    const k = ease(ramp(t, p.at + 250, 600));
+    boxEls[b.id].style.opacity = String(k);
+    boxEls[b.id].style.transform = `translateY(${(1 - k) * 16}px)`;
+  }
+  const wiresIn = ramp(t, 5600, 900);
+
+  // Which chapter and step are we in?
+  const chapter = CHAPTERS.find((c) => t >= c.from && t < c.to);
+  chapterEl.textContent = chapter ? chapter.name : "";
+  chapterEl.style.opacity = chapter ? String(ramp(t, chapter.from, 400)) : "0";
+  const step = STEPS.find((s) => t >= s.at && t < s.end);
+
+  // Wires: dim by default; edges already travelled in this chapter stay lit.
+  const lit = new Set();
+  if (chapter) for (const s of STEPS) if (s.edge && s.at >= chapter.from && s.end <= t) lit.add(s.edge);
+  for (const [id, path] of Object.entries(pathEls)) {
+    const active = step && step.edge === id;
+    const color = active ? COLORS[step.color || "sky"] : lit.has(id) ? "#2b86b3" : "#39416d";
+    path.setAttribute("stroke", color);
+    path.setAttribute("stroke-width", active ? "3" : lit.has(id) ? "2.2" : "1.6");
+    path.style.opacity = String(wiresIn);
+  }
+
+  // Boxes: glow the ones this step touches.
+  const touched = new Set(step ? step.glow || [] : []);
+  if (step && step.edge) { touched.add(step.edge.slice(0, 2)); touched.add(step.edge.slice(2, 4)); }
+  for (const b of BOXES) {
+    const el = boxEls[b.id];
+    if (touched.has(b.id)) {
+      const c = COLORS[(step && step.color) || "sky"];
+      el.style.boxShadow = `0 0 0 2px ${c}, 0 0 34px ${c}66`;
+    } else {
+      el.style.boxShadow = "none";
+    }
+  }
+
+  // The packet, with a short trail.
+  let packetOn = false;
+  if (step && step.edge) {
+    const len = lengths[step.edge];
+    const dur = step.end - step.at;
+    const raw = clamp((t - step.at) / Math.max(1, dur - 350));
+    const color = COLORS[step.color || "sky"];
+    trail.forEach((c, i) => {
+      let k = ease(clamp(raw - i * 0.025));
+      if (step.dir === -1) k = 1 - k;
+      const pt = pathEls[step.edge].getPointAtLength(k * len);
+      c.setAttribute("cx", pt.x);
+      c.setAttribute("cy", pt.y);
+      c.setAttribute("fill", color);
+      c.setAttribute("opacity", String((1 - i / 6) * (1 - ramp(t, step.end - 250, 250))));
+    });
+    packetOn = true;
+
+    if (step.label) {
+      const mid = pathEls[step.edge].getPointAtLength(len / 2);
+      chip.textContent = step.label;
+      chip.style.left = mid.x + "px";
+      chip.style.top = mid.y - 16 + "px";
+      chip.style.borderColor = color;
+      chip.style.opacity = String(ramp(t, step.at, 250) * (1 - ramp(t, step.end - 250, 250)));
+    } else {
+      chip.style.opacity = "0";
+    }
+  } else {
+    chip.style.opacity = "0";
+  }
+  if (!packetOn) trail.forEach((c) => c.setAttribute("opacity", "0"));
+
+  // A badge over a box (checks, "− 1 flat").
+  if (step && step.badge) {
+    const b = box[step.badge.on];
+    badge.textContent = step.badge.text;
+    badge.style.left = b.x + b.w / 2 + "px";
+    badge.style.top = b.y - 2 + "px";
+    badge.style.background = COLORS[step.badge.color];
+    const k = ease(ramp(t, step.at + 150, 350));
+    badge.style.opacity = String(k * (1 - ramp(t, step.end - 250, 250)));
+    badge.style.transform = `translate(-50%, -50%) scale(${0.85 + 0.15 * k})`;
+  } else {
+    badge.style.opacity = "0";
+  }
+
+  // The four CI checks tick one after another, then stay until the chapter ends.
+  const ci = STEPS.find((s) => s.checks);
+  checkEls.forEach((el, i) => {
+    const k = ease(ramp(t, ci.at + 500 + i * 550, 300));
+    el.style.opacity = t < 79000 ? String(k) : String(1 - ramp(t, 79000, 400));
+    el.style.transform = `translate(-50%, ${(1 - k) * 8}px)`;
+  });
+
+  // Caption: the latest caption at or before now, within the story.
+  let cap = null;
+  for (const s of STEPS) if (s.cap && s.at <= t && t < 79000) cap = s;
+  captionEl.textContent = cap ? cap.cap : "";
+  captionEl.style.opacity = cap ? String(ramp(t, cap.at, 350)) : "0";
+}
+
+// ---------------------------------------------------------------- run
+function fit() {
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  stage.style.transform = `scale(${s})`;
+}
+window.renderAt = renderAt;
+window.TOTAL_MS = TOTAL;
+
+if (location.hash === "#capture") {
+  renderAt(0);
+} else {
+  fit();
+  window.addEventListener("resize", fit);
+  let start = performance.now();
+  stage.addEventListener("click", () => { start = performance.now(); });
+  const loop = (now) => { renderAt(now - start); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
