@@ -1,22 +1,22 @@
 // POST /api/ai/describe   (body: DescribeInput, auth required)
-// Returns { description } drafted by Claude from the listing form's fields.
+// Returns { description } drafted by Gemini from the listing form's fields.
 
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getCurrentUserId, INVALID_JSON, jsonError, parseOr400, readJson } from "@/lib/api";
 import {
   describeInputSchema,
   DescriptionUnavailableError,
   writeDescription,
 } from "@/lib/ai-description";
+import { geminiErrorStatus, isGeminiConfigured } from "@/lib/gemini.server";
 
 export async function POST(request: Request) {
   // Every call costs money, so only logged-in users may use it.
   const userId = await getCurrentUserId(request);
   if (!userId) return jsonError(401, "You must be logged in to use the AI writer");
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return jsonError(503, "The AI writer is not set up yet (missing ANTHROPIC_API_KEY)");
+  if (!isGeminiConfigured()) {
+    return jsonError(503, "The AI writer is not set up yet (missing GEMINI_API_KEY)");
   }
 
   const body = await readJson(request);
@@ -32,13 +32,10 @@ export async function POST(request: Request) {
     if (error instanceof DescriptionUnavailableError) {
       return jsonError(502, error.message);
     }
-    if (error instanceof Anthropic.RateLimitError) {
+    if (geminiErrorStatus(error) === 429) {
       return jsonError(429, "The AI writer is busy. Try again in a minute.");
     }
-    if (error instanceof Anthropic.APIError) {
-      console.error("Claude API error", error.status, error.message);
-      return jsonError(502, "The AI writer failed. Please try again.");
-    }
-    throw error;
+    console.error("[ai/describe]", error);
+    return jsonError(502, "The AI writer failed. Please try again.");
   }
 }

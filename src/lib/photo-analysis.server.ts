@@ -1,8 +1,7 @@
-// The Gemini call behind "Fill in from my photos". Server-only: it reads
-// GEMINI_API_KEY, which must never reach the browser. Only the API route
-// imports this file.
+// The Gemini call behind "Fill in from my photos". Server-only: only the API
+// route imports this file.
 
-import { GoogleGenAI } from "@google/genai";
+import { GEMINI_MODEL, geminiClient } from "./gemini.server";
 import {
   PHOTO_ANALYSIS_PROMPT,
   parsePhotoAnalysis,
@@ -10,12 +9,7 @@ import {
   type PhotoAnalysis,
 } from "./photo-analysis";
 
-/** Fast multimodal model; override with GEMINI_MODEL if your key needs another. */
-const DEFAULT_MODEL = "gemini-3.8-flash";
-
-export function isPhotoAnalysisConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY);
-}
+export { isGeminiConfigured as isPhotoAnalysisConfigured } from "./gemini.server";
 
 export type PhotoInput = {
   /** Base64, without a data: prefix. */
@@ -25,10 +19,8 @@ export type PhotoInput = {
 
 /** Ask Gemini what the photos show. Throws if the call fails or the answer is unusable. */
 export async function analyzePhotos(photos: PhotoInput[]): Promise<PhotoAnalysis> {
-  const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-  const interaction = await client.interactions.create({
-    model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
+  const interaction = await geminiClient().interactions.create({
+    model: GEMINI_MODEL,
     system_instruction: PHOTO_ANALYSIS_PROMPT,
     input: [
       {
