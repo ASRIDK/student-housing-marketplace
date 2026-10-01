@@ -89,6 +89,25 @@
     position: absolute; transform: translate(-50%, -50%); font-size: 18px; font-weight: 700;
     color: #0d1024; border-radius: 999px; padding: 5px 13px;
   }
+
+  /* Presenter controls (hidden when the page is recorded as a video). */
+  #overlays, #caption, #title, #ending, svg#wires { pointer-events: none; }
+  body.interactive .box { cursor: pointer; transition: border-color 0.15s; }
+  body.interactive .box:hover { border-color: var(--sky); }
+  #controls { display: flex; align-items: center; gap: 8px; margin-left: 28px; }
+  #controls[hidden] { display: none; }
+  #controls button {
+    font: 600 15px "Inter", system-ui, sans-serif; color: #dfe6f5; cursor: pointer;
+    background: var(--box); border: 1px solid var(--box-line); border-radius: 999px;
+    padding: 8px 16px; min-width: 44px;
+  }
+  #controls button:hover { border-color: var(--sky); }
+  #controls button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+  #controls button[aria-pressed="true"] { background: var(--sky); border-color: var(--sky); color: #0d1024; }
+  #hint {
+    position: absolute; right: 60px; top: 104px; font-size: 14px; color: var(--dim);
+  }
+  #hint[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -97,7 +116,14 @@
     <div id="logo">SS</div>
     <div id="brand">StudentSwap<small>how it works, step by step</small></div>
     <div id="chapter"></div>
+    <div id="controls" hidden>
+      <button id="prev" type="button" title="Previous step (←)" aria-label="Previous step">&lsaquo;</button>
+      <button id="play" type="button" title="Pause or play (Space)">Pause</button>
+      <button id="next" type="button" title="Next step (→)" aria-label="Next step">&rsaquo;</button>
+      <button id="auto" type="button" title="Pause after every step (A)" aria-pressed="false">Stop at each step</button>
+    </div>
   </div>
+  <div id="hint" hidden>Space pause &middot; &larr; &rarr; steps &middot; 1&ndash;4 chapters &middot; click a block to jump to it</div>
   <div id="panels"></div>
   <svg id="wires" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
   <div id="boxes"></div>
@@ -436,21 +462,132 @@ function renderAt(t) {
 }
 
 // ---------------------------------------------------------------- run
+// Scale the 1920×1080 stage to the window and centre it. (Scaling around the
+// centre would leave it offset whenever the window is smaller than the stage.)
 function fit() {
   const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  stage.style.position = "absolute";
+  stage.style.transformOrigin = "0 0";
+  stage.style.left = (window.innerWidth - 1920 * s) / 2 + "px";
+  stage.style.top = (window.innerHeight - 1080 * s) / 2 + "px";
   stage.style.transform = `scale(${s})`;
 }
 window.renderAt = renderAt;
 window.TOTAL_MS = TOTAL;
+
+// The moments a presenter can step between: the title, the build-in, every
+// step of the story, and the ending.
+const MARKS = [0, 3000, ...STEPS.map((s) => s.at), 79500];
 
 if (location.hash === "#capture") {
   renderAt(0);
 } else {
   fit();
   window.addEventListener("resize", fit);
-  let start = performance.now();
-  stage.addEventListener("click", () => { start = performance.now(); });
-  const loop = (now) => { renderAt(now - start); requestAnimationFrame(loop); };
+  presenter();
+}
+
+function presenter() {
+  document.body.classList.add("interactive");
+  const controls = document.getElementById("controls");
+  const hint = document.getElementById("hint");
+  const playBtn = document.getElementById("play");
+  const autoBtn = document.getElementById("auto");
+  controls.hidden = false;
+  hint.hidden = false;
+
+  let t = 0;
+  let playing = true;
+  let autoPause = false;
+  let last = performance.now();
+
+  const stepAt = (ms) => STEPS.find((s) => ms >= s.at && ms < s.end);
+  const markIndexAt = (ms) => {
+    let i = 0;
+    MARKS.forEach((m, k) => { if (m <= ms) i = k; });
+    return i;
+  };
+
+  function setPlaying(value) {
+    playing = value;
+    playBtn.textContent = value ? "Pause" : "Play";
+    last = performance.now();
+  }
+
+  // Jump to a moment. Paused, it lands part-way into the step so the moving
+  // dot and its label are on screen while the presenter talks.
+  function goTo(mark) {
+    const step = STEPS.find((s) => s.at === mark);
+    t = !playing && step ? mark + (step.end - step.at) * 0.6 : mark;
+    renderAt(t);
+  }
+
+  function next() {
+    goTo(MARKS[Math.min(markIndexAt(t) + 1, MARKS.length - 1)]);
+    if (autoPause) setPlaying(true);
+  }
+  function prev() {
+    goTo(MARKS[Math.max(markIndexAt(t) - 1, 0)]);
+  }
+  function togglePlay() {
+    if (!playing && t >= TOTAL - 50) t = 0;
+    setPlaying(!playing);
+  }
+  function toggleAuto() {
+    autoPause = !autoPause;
+    autoBtn.setAttribute("aria-pressed", String(autoPause));
+  }
+
+  // Clicking a block skips to the next step of the story that uses it.
+  for (const b of BOXES) {
+    boxEls[b.id].addEventListener("click", () => {
+      const touches = (s) =>
+        (s.glow || []).includes(b.id) ||
+        (s.badge && s.badge.on === b.id) ||
+        (s.edge && (s.edge.slice(0, 2) === b.id || s.edge.slice(2, 4) === b.id));
+      const after = STEPS.filter((s) => s.at > t + 50 && touches(s));
+      const target = after[0] || STEPS.find(touches);
+      if (!target) return;
+      goTo(target.at);
+      if (autoPause) setPlaying(true);
+    });
+  }
+
+  document.getElementById("prev").addEventListener("click", prev);
+  document.getElementById("next").addEventListener("click", next);
+  playBtn.addEventListener("click", togglePlay);
+  autoBtn.addEventListener("click", toggleAuto);
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === " ") { event.preventDefault(); togglePlay(); }
+    else if (event.key === "ArrowRight") next();
+    else if (event.key === "ArrowLeft") prev();
+    else if (event.key === "a" || event.key === "A") toggleAuto();
+    else if (event.key === "r" || event.key === "R") goTo(0);
+    else if (/^[1-4]$/.test(event.key)) {
+      goTo(CHAPTERS[Number(event.key) - 1].from);
+      if (autoPause) setPlaying(true);
+    }
+  });
+
+  function loop(now) {
+    if (playing) {
+      let nt = t + (now - last);
+      // "Stop at each step": hold just before the step's label fades out.
+      const step = stepAt(t);
+      if (autoPause && step) {
+        const stop = step.end - 300;
+        if (t < stop && nt >= stop) {
+          nt = stop;
+          setPlaying(false);
+        }
+      }
+      t = nt >= TOTAL ? 0 : nt;
+    }
+    last = now;
+    renderAt(t);
+    requestAnimationFrame(loop);
+  }
   requestAnimationFrame(loop);
 }
 </script>
