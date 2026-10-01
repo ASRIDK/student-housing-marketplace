@@ -98,6 +98,26 @@ flowchart TD
     api --> ai
     listings -- "Prisma, WebSocket on 443" --> db
     ai -- "photos and facts in, JSON out" --> gemini
+
+    classDef user fill:#202448,stroke:#2eaee0,stroke-width:2px,color:#ffffff
+    classDef server fill:#0f2a40,stroke:#2eaee0,stroke-width:2px,color:#ffffff
+    classDef check fill:#33290f,stroke:#e7a92d,stroke-width:2px,color:#ffffff
+    classDef code fill:#1a2040,stroke:#5b6480,stroke-width:2px,color:#ffffff
+    classDef data fill:#0d302d,stroke:#14a38b,stroke-width:2px,color:#ffffff
+    classDef ai fill:#231c47,stroke:#8b74e8,stroke-width:2px,color:#ffffff
+
+    class student user
+    class pages,api server
+    class schema check
+    class listings code
+    class db data
+    class ai,gemini ai
+
+    style next fill:#141933,stroke:#2eaee0,color:#2eaee0
+    style lib fill:#141933,stroke:#5b6480,color:#a8b4cf
+
+    linkStyle 6 stroke:#14a38b,stroke-width:2px
+    linkStyle 5,7 stroke:#8b74e8,stroke-width:2px
 ```
 
 Two rules hold the design together: only `src/lib/listings.ts` talks to the
