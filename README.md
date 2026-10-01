@@ -73,6 +73,20 @@ tool throughout and Git/GitHub as the team's shared workspace.
 
 ## Architecture
 
+<img src="assets/architecture.png" alt="StudentSwap architecture in five layers. The student browses, opens a listing, posts a place and manages their listings. The Next.js server renders pages with Server Components and handles writes in API routes, checked by Zod validation. Our code: listings.ts runs every database query, photo-analysis.ts and ai-description.ts hold the AI prompts. Data and AI: Neon Postgres and Gemini. Underneath, how code is built: branch, pull request, GitHub Actions, review and merge, main." width="100%">
+
+Two rules hold the design together: only `src/lib/listings.ts` talks to the
+database, and only the server ever holds the AI key.
+
+**See it move.** [`documentation/architecture.html`](documentation/architecture.html)
+plays the same diagram step by step from the user's point of view: browsing,
+posting with photos, handing a flat over, and how code reaches `main`. Download
+it and open it in a browser: Space pauses, the arrow keys step, 1–4 jump to a
+chapter, and clicking a block jumps to the step that uses it.
+
+<details>
+<summary>The same architecture as a text diagram (Mermaid)</summary>
+
 ```mermaid
 flowchart TD
     student(["Student in the browser"])
@@ -120,14 +134,7 @@ flowchart TD
     linkStyle 5,7 stroke:#8b74e8,stroke-width:2px
 ```
 
-Two rules hold the design together: only `src/lib/listings.ts` talks to the
-database, and only the server ever holds the AI key.
-
-An animated, step-by-step walkthrough of the same architecture, from the
-user's point of view (browsing, posting with photos, handing over, and how
-code reaches `main`), is in
-[`documentation/architecture.html`](documentation/architecture.html). Open it
-in a browser; click to restart.
+</details>
 
 ## Getting started
 
