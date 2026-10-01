@@ -4,7 +4,7 @@
 // the browser.
 
 import { z } from "zod";
-import { GEMINI_MODEL, geminiClient } from "./gemini.server";
+import { geminiClient, withGeminiFallback } from "./gemini.server";
 import { CITIES } from "./types";
 
 const isoDate = z.iso.date();
@@ -62,23 +62,35 @@ export function formatFacts(input: DescribeInput): string {
 
 export class DescriptionUnavailableError extends Error {}
 
-/** Ask Gemini for a description. Throws DescriptionUnavailableError on an unfinished or empty answer. */
+/**
+ * Ask Gemini for a description. If a model is busy or returns nothing usable,
+ * the next model in the chain tries. Throws DescriptionUnavailableError (or
+ * the last API error) if all fail.
+ */
 export async function writeDescription(input: DescribeInput): Promise<string> {
-  const interaction = await geminiClient().interactions.create({
-    model: GEMINI_MODEL,
-    system_instruction: SYSTEM_PROMPT,
-    input: formatFacts(input),
-    store: false,
-  });
+  return withGeminiFallback(
+    async (model, options) => {
+      const interaction = await geminiClient().interactions.create(
+        {
+          model,
+          system_instruction: SYSTEM_PROMPT,
+          input: formatFacts(input),
+          generation_config: { thinking_level: "low" },
+          store: false,
+        },
+        options
+      );
 
-  if (interaction.status && interaction.status !== "completed") {
-    throw new DescriptionUnavailableError("The AI could not write this description.");
-  }
+      if (interaction.status && interaction.status !== "completed") {
+        throw new DescriptionUnavailableError("The AI could not write this description.");
+      }
 
-  const text = (interaction.output_text ?? "").trim();
-
-  if (text.length < 20) {
-    throw new DescriptionUnavailableError("The AI returned an empty description.");
-  }
-  return text.slice(0, 2_000);
+      const text = (interaction.output_text ?? "").trim();
+      if (text.length < 20) {
+        throw new DescriptionUnavailableError("The AI returned an empty description.");
+      }
+      return text.slice(0, 2_000);
+    },
+    { alsoRetry: (error) => error instanceof DescriptionUnavailableError }
+  );
 }
